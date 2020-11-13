@@ -1,0 +1,73 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# go dep
+/_vendor*
+/vendor
+
+# other
+/.tmp
+
+# Build artifacts
+*.py[cod]
+*.egg
+*.egg-info
+.bash*
+.config
+dist
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+__pycache__
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.nox
+.tox
+.cache
+.pytest_cache
+htmlcov
+
+# IDEs
+*.sublime-workspace
+
+# Mac
+.DS_Store
+
+# Built documentation
+docs/build
+
+# Make sure a generated file isn't accidentally committed.
+pylintrc
+pylintrc.test
+
+# Logs
+*.log
+
+# pipeline debugging items
+WORKSPACE
+RPMS
+rpm_build.sh
+loftsman
+helm
+/.version
+
+# Loftsman v1
+/.tests
+/.build

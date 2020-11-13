@@ -1,0 +1,16 @@
+---
+apiVersion: manifests/v1beta1
+metadata:
+  name: test-manifest
+spec:
+  charts:
+    - name: "test-chart"
+      namespace: "default"
+      version: 1.0.0
+      values:
+        one: 1
+        two: "TWO"
+        three:
+          a: A
+          b: B
+          c: C
