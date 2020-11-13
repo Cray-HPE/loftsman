@@ -64,8 +64,8 @@ pylintrc.test
 WORKSPACE
 RPMS
 rpm_build.sh
-loftsman
-helm
+/loftsman
+/helm
 /.version
 
 # Loftsman v1
