@@ -1,24 +1,16 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+name: Bug Report
+about: Report a bug encountered while using Loftsman
+labels: bug
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+<!-- Please use this template while reporting a bug and provide as much info as possible. -->
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+#### What happened?
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+#### What did you expect to happen?
 
-**Context**
-Add any other context about the problem here.
+#### How to reproduce the issue (as minimally and precisely as possible):
+
+#### Anything else worth sharing:

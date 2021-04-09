@@ -34,7 +34,6 @@ type Chart struct {
 	Name      string      `yaml:"name,omitempty" json:"name,omitempty"`
 	Namespace string      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Version   string      `yaml:"version,omitempty" json:"version,omitempty"`
-	Replaces  []*Replace  `yaml:"replaces,omitempty" json:"replaces,omitempty"`
 	Values    interface{} `yaml:"values,omitempty" json:"-"` // json:"-" here is to ignore generic type validation, otherwise we'd get: json: unsupported type: map[interface {}]interface {}
 }
 

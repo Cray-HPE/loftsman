@@ -1,14 +1,115 @@
+name: release
 on:
-  release:
-    types: [created]
-name: Handle Release
+  push:
+    tags:
+    - '[0-9]+.[0-9]+.[0-9]+'
+    - '[0-9]+.[0-9]+.[0-9]+-**'
 jobs:
-  generate:
-    name: Create release-artifacts
+  test-and-initialize-release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - name: Generate
-      uses: skx/github-action-build@master
+    - name: install go
+      uses: actions/setup-go@v2
       with:
-        builder: .github/build
+        go-version: 1.16.x
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: test
+      run: ./scripts/tests-unit.sh
+    - name: get tag name
+      id: get_tag_name
+      run: echo ::set-output name=TAG_NAME::${GITHUB_REF/refs\/tags\//}
+      shell: bash
+    - name: determine release type
+      id: determine_release_type
+      run: echo ::set-output name=IS_PRE_RELEASE::${{ contains(steps.get_tag_name.outputs.TAG_NAME, '-') }}
+    - name: read changelog
+      id: read_changelog
+      uses: juliangruber/read-file-action@v1
+      with:
+        path: CHANGELOG/CHANGELOG-${{ steps.get_tag_name.outputs.TAG_NAME }}.md
+    - name: publish changelog
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: CHANGELOG/CHANGELOG-${{ steps.get_tag_name.outputs.TAG_NAME }}.md
+        asset_name: CHANGELOG.md
+        tag: ${{ github.ref }}
+        body: ${{ steps.read_changelog.outputs.content }}
+        prerelease: ${{ steps.determine_release_type.outputs.IS_PRE_RELEASE }}
+    - name: publish license
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: LICENSE
+        asset_name: LICENSE
+        tag: ${{ github.ref }}
+        body: ${{ steps.read_changelog.outputs.content }}
+        prerelease: ${{ steps.determine_release_type.outputs.IS_PRE_RELEASE }}
+    - name: zip test results
+      uses: papeloto/action-zip@v1
+      with:
+        files: .tests/
+        dest: test-results.zip
+    - name: publish test results
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: test-results.zip
+        asset_name: test-results.zip
+        tag: ${{ github.ref }}
+        body: ${{ steps.read_changelog.outputs.content }}
+        prerelease: ${{ steps.determine_release_type.outputs.IS_PRE_RELEASE }}
+    outputs:
+      tag_name: ${{ steps.get_tag_name.outputs.TAG_NAME }}
+      is_pre_release: ${{ steps.determine_release_type.outputs.IS_PRE_RELEASE }}
+      changelog: ${{ steps.read_changelog.outputs.content }}
+  build-and-release-binaries:
+    needs: test-and-initialize-release
+    strategy:
+      matrix:
+        include:
+        - os: ubuntu-latest
+          binary_artifact_name: loftsman
+          binary_publish_name: loftsman-linux-amd64
+          hash_file_command: 'shasum -a 256'
+        - os: macos-latest
+          binary_artifact_name: loftsman
+          binary_publish_name: loftsman-darwin-amd64
+          hash_file_command: 'shasum -a 256'
+        - os: windows-latest
+          binary_artifact_name: loftsman.exe
+          binary_publish_name: loftsman-windows-amd6.exe
+          hash_file_command: 'get-filehash -Algorithm SHA256'
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: install go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16.x
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: build binary
+      run: |
+        go build -o ${{ matrix.binary_artifact_name }} -ldflags "-X 'github.com/Cray-HPE/loftsman/cmd.Version=${{ needs.test-and-initialize-release.outputs.tag_name }}'"
+    - name: write binary checksum
+      run: |
+        ${{ matrix.hash_file_command }} ${{ matrix.binary_artifact_name }} >> ${{ matrix.binary_publish_name }}.sha256sum
+    - name: publish binary
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ${{ matrix.binary_artifact_name }}
+        asset_name: '${{ matrix.binary_publish_name }}'
+        tag: ${{ github.ref }}
+        body: ${{ needs.test-and-initialize-release.outputs.changelog }}
+        prerelease: ${{ needs.test-and-initialize-release.outputs.is_pre_release }}
+    - name: publish binary checksum
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ${{ matrix.binary_publish_name }}.sha256sum
+        asset_name: ${{ matrix.binary_publish_name }}.sha256sum
+        tag: ${{ github.ref }}
+        body: ${{ needs.test-and-initialize-release.outputs.changelog }}
+        prerelease: ${{ needs.test-and-initialize-release.outputs.is_pre_release }}

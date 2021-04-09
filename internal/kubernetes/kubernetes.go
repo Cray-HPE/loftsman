@@ -14,6 +14,23 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
+	// Imported to support the fact that alternative client-go auth mechansims are not included
+	// by default in the client-go default usage itself
+	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
+	// Imported to support the fact that alternative client-go auth mechansims are not included
+	// by default in the client-go default usage itself
+	_ "k8s.io/client-go/plugin/pkg/client/auth/exec"
+	// Imported to support the fact that alternative client-go auth mechansims are not included
+	// by default in the client-go default usage itself
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	// Imported to support the fact that alternative client-go auth mechansims are not included
+	// by default in the client-go default usage itself
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
+	// Imported to support the fact that alternative client-go auth mechansims are not included
+	// by default in the client-go default usage itself
+	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
+	// Imported to support the fact that alternative client-go auth mechansims are not included
+	// by default in the client-go default usage itself
 )
 
 // Kubernetes is our k8s client object, implements internal/interfaces/kubernetes.go
