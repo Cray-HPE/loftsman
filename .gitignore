@@ -60,14 +60,6 @@ pylintrc.test
 # Logs
 *.log
 
-# pipeline debugging items
-WORKSPACE
-RPMS
-rpm_build.sh
-/loftsman
-/helm
-/.version
-
 # Loftsman v1
 /.tests
 /tests.zip
