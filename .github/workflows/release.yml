@@ -79,7 +79,7 @@ jobs:
           hash_file_command: 'shasum -a 256'
         - os: windows-latest
           binary_artifact_name: loftsman.exe
-          binary_publish_name: loftsman-windows-amd6.exe
+          binary_publish_name: loftsman-windows-amd64.exe
           hash_file_command: 'get-filehash -Algorithm SHA256'
     runs-on: ${{ matrix.os }}
     steps:
