@@ -2,7 +2,7 @@
 
 set -e
 
-GO_VERSION="1.13.9"
+GO_VERSION="1.16.2"
 INSTALLED_GO_VERSION=$(go version | awk '{print $3}')
 HELM_VERSION="v3.2.4"
 
@@ -20,7 +20,7 @@ mkdir -p $GOPATH/src
 mkdir -p $GOPATH/pkg
 
 if ! command -v bc &> /dev/null; then
-  zypper -n install -y bc
+    zypper -n install -y bc
 fi
 
 echo "Getting the Helm binary to package with the rpm"
@@ -33,7 +33,9 @@ echo "Running tests"
 ./scripts/tests-unit.sh
 
 echo "Building loftsman binaries"
-./scripts/build.sh
+mkdir -p .build
+git_version=$(git rev-parse --short HEAD)
+go build -o ./.build/loftsman-linux-amd64 -ldflags "-X 'github.com/Cray-HPE/loftsman/cmd.Version=${git_version}'"
 
 VERSION=$(./.build/loftsman-linux-amd64 --version | awk '{print $3}')
 if [ ! -z "${BUILD_NUMBER}" ]; then

@@ -13,21 +13,27 @@
 
 ## Define, organize, and ship your Kubernetes workloads with Helm charts easily
 
-Loftsman is a manifest-based utility for managing the installation and upgrading of Kubernetes workloads via Helm charts. Some of the features include:
+It's hard to orchestrate, manage, and observe Kubernetes cluster workloads as a whole. Loftsman takes a manifest you've defined for all of the things that should be present or running in your cluster and handles the rest.
 
-* Support for Helm v3 (and only Helm v3 in fact)
-* Support for installing Helm charts from both a local directory or an authenticated charts repository
-* Manifest-driven Helm chart installs, so defining the charts that are running in your cluster, the order in which they're installed/upgraded, and dynamic value overrides can all be managed by a manifest that Loftsman can help you create and understand
-* A handful of release flow wrapper enhancements around Helm to address long-running issues with using Helm directly, such as https://github.com/helm/helm/issues/3353
+### Features
 
-## Developing and Testing
+* Simple, declarative manifests for defining everything to exist and run in your Kubernetes cluster in an organized and maintainable way
+* Any easy command-line interface with minimal requirements for generating and shipping your manifests of cluster workloads
+* Support for Kubernetes cluster install and upgrade scenarios and needs ranging from cloud-native to large-scale enterprise, such as air-gapped environments
+* In support of GitOps release workflows, e.g. CI/CD listening for manifest changes in a repo and shipping new manifests when detected
 
-To develop loftsman, you'll need:
+### Features Coming Soon
 
-* a local Go 1.13 environment
-* `golint` installed for running tests/linting locally
-* `mockery` installed for regenerating mocks
+* Ability to run Loftsman as an operator in your cluster and simply apply your manifest YAML to run installs and upgrades (https://github.com/Cray-HPE/loftsman/issues/10)
+* Move to a manifest-driven approach for supporting multiple remote chart repos instead of providing this info via CLI args (issues and more info coming soon on this)
 
-### Incrementing the Version
+## Learn More about Loftsman and Start Using it
 
-Prior to a release, we need to change the version value in `/cmd/version/version.go`. All other versioning tasks will be handled for you in the pipeline, but this must be done on merge to master.
+See the following for more information on how Loftsman can help you:
+
+* [Installing and getting started with Loftsman](./docs#getting-started)
+* Browse all [Loftsman documentation](./docs)
+
+And, if you're interested, how you can help Loftsman:
+
+* [Contributing to Loftsman](./CONTRIBUTING.md)

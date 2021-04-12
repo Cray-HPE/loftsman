@@ -70,4 +70,7 @@ rpm_build.sh
 
 # Loftsman v1
 /.tests
+/tests.zip
 /.build
+/loftsman
+/loftsman.exe

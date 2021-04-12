@@ -10,7 +10,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/Cray-HPE/loftsman/cmd/version"
 	"github.com/Cray-HPE/loftsman/internal"
 	"github.com/Cray-HPE/loftsman/internal/logger"
 )
@@ -20,6 +19,8 @@ const (
 	manifestPathArgName = "manifest-path"
 )
 
+// Version is the CLI tool version, this should be overridden at build time for anything to be distributed
+var Version = "dev"
 var loftsman = internal.NewLoftsman()
 
 var rootCmd = &cobra.Command{
@@ -49,7 +50,7 @@ A pretty standard loftsman case of running shape and then ship:
     --%s ./manifest.yaml
 
 Certain components, files or programs contained within this package or product are
-Copyright 2019 Cray Inc. All rights reserved.`, logger.GetHelpLogo(), manifestPathArgName),
+Copyright 2019 Cray/HPE Inc. All rights reserved.`, logger.GetHelpLogo(), manifestPathArgName),
 }
 
 var manifestCmd = &cobra.Command{
@@ -107,7 +108,7 @@ REMOVED: %s`, logger.GetHelpLogo(), helmCmdHelp),
 }
 
 func init() {
-	rootCmd.Version = strings.TrimSpace(version.LoftsmanVersion)
+	rootCmd.Version = strings.TrimSpace(Version)
 
 	cobra.OnInitialize(initConfig)
 
