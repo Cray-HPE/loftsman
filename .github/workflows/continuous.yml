@@ -20,6 +20,14 @@ jobs:
       uses: actions/checkout@v2
     - name: test
       run: ./scripts/tests-unit.sh
+  test-container-image-build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: build container image
+      run: |
+        docker build -t loftsman:dev .
   test-builds:
     strategy:
       matrix:
