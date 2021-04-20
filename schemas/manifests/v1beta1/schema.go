@@ -32,15 +32,10 @@ type Spec struct {
 
 // Chart is a v1 schema Chart object
 type Chart struct {
-	Name      string      `yaml:"name,omitempty" json:"name,omitempty"`
-	Namespace string      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Version   string      `yaml:"version,omitempty" json:"version,omitempty"`
-	Values    interface{} `yaml:"values,omitempty" json:"-"` // json:"-" here is to ignore generic type validation, otherwise we'd get: json: unsupported type: map[interface {}]interface {}
-	Timeout   string      `yaml:"timeout,omitempty" json:"timeout,omitempty"`
-}
-
-// Replace defines a single item in the list of a chart's "replaces" list
-type Replace struct {
-	Name      string `yaml:"name,omitempty" json:"name,omitempty"`
-	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Name        string      `yaml:"name,omitempty" json:"name,omitempty"`
+	ReleaseName string      `yaml:"releaseName,omitempty" json:"releaseName,omitempty"`
+	Namespace   string      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Version     string      `yaml:"version,omitempty" json:"version,omitempty"`
+	Values      interface{} `yaml:"values,omitempty" json:"-"` // json:"-" here is to ignore generic type validation, otherwise we'd get: json: unsupported type: map[interface {}]interface {}
+	Timeout     string      `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 }

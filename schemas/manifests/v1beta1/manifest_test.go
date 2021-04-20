@@ -293,3 +293,29 @@ func TestIndividualChartTimeout(t *testing.T) {
 		t.Errorf("Got unexpected errors from manifest.v1beta1.TestIndividualChartTimeout(): %s", errsToString(errs))
 	}
 }
+
+func TestCustomReleaseName(t *testing.T) {
+	availableChartVersions := []*interfaces.HelmAvailableChartVersion{
+		&interfaces.HelmAvailableChartVersion{
+			Version: "0.0.1",
+			Path:    "/tmp/full-chart-0.0.1.tgz",
+		},
+	}
+	manifest := getTestManifest()
+	manifest.Spec.Charts = []*Chart{
+		&Chart{
+			Name:        "full-chart",
+			ReleaseName: "full-chart-release-1",
+			Namespace:   "default",
+			Version:     "0.0.1",
+			Values: map[string]interface{}{
+				"one": "1",
+				"two": "2",
+			},
+		},
+	}
+	errs := manifest.Release(custommocks.GetKubernetesMock(false), custommocks.GetHelmMock(availableChartVersions))
+	if len(errs) != 0 {
+		t.Errorf("Got unexpected errors from manifest.v1beta1.TestCustomReleaseName(): %s", errsToString(errs))
+	}
+}
