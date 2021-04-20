@@ -18,6 +18,7 @@ const Schema = `
       ],
       "properties": {
         "name": { "type": "string" },
+        "releaseName": { "type": "string" },
         "namespace": { "type": "string" },
         "version": { "type": "string" },
         "values": { "type": [ "object", "null" ] },

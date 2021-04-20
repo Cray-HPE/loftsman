@@ -123,9 +123,13 @@ func (m *Manifest) Release(kubernetes interfaces.Kubernetes, helm interfaces.Hel
 			continue
 		}
 
+		releaseName := chart.Name
+		if chart.ReleaseName != "" {
+			releaseName = chart.ReleaseName
+		}
 		installUpgradeCmd := strings.TrimSpace(fmt.Sprintf(
 			"upgrade --install %s %s --namespace %s --create-namespace --set global.chart.name=%s --set global.chart.version=%s %s",
-			chart.Name,
+			releaseName,
 			chartPath,
 			chart.Namespace,
 			chart.Name,
