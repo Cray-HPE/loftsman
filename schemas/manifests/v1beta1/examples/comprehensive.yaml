@@ -2,6 +2,7 @@ apiVersion: manifests/v1beta1
 metadata:
   name: simple-manifest
 spec:
+  chartTimeout: 10m0s # override default Helm install/upgrade timeout for any chart, a go duration: https://golang.org/pkg/time/#ParseDuration
   charts:
   - name: my-chart-1   # the name of the chart
     namespace: default # the namespace where your chart's resources should live
@@ -16,3 +17,4 @@ spec:
   - name: my-chart-2
     namespace: another-namespace # the namespace will be created if it doesn't already exist
     version: 1.7.5
+    timeout: 12m30s # you can also override the Helm install/upgrade timeout on a per-chart basis

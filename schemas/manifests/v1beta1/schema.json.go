@@ -20,7 +20,8 @@ const Schema = `
         "name": { "type": "string" },
         "namespace": { "type": "string" },
         "version": { "type": "string" },
-        "values": { "type": [ "object", "null" ] }
+        "values": { "type": [ "object", "null" ] },
+        "timeout": { "type": "string" }
       }
     }
   },
@@ -42,6 +43,7 @@ const Schema = `
     "spec": {
       "type": "object",
       "properties": {
+        "chartTimeout": { "type": "string" },
         "charts": {
           "type": "array",
           "items": { "$ref": "#/definitions/chart" }
