@@ -5,6 +5,8 @@ ARG HELM_VERSION=3.5.4
 
 ENV GO111MODULE=on
 
+# We're actually going to build Helm from source in this container so that we have
+# more assurance of the binary running stably within an alpine-based container image
 RUN apk add --no-cache git make bash
 RUN git clone https://github.com/helm/helm.git /helm
 WORKDIR /helm
