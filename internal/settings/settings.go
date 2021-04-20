@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/Cray-HPE/go-lib/shell"
 	"github.com/Cray-HPE/loftsman/internal/interfaces"
@@ -70,10 +69,9 @@ func (s *Settings) ValidateManifestPath() error {
 
 // New gets a settings object with defaults
 func New() *Settings {
-	cwd, _ := os.Getwd()
 	return &Settings{
 		JSONLog: &JSONLog{
-			Path: filepath.Join(cwd, "loftsman.log"),
+			Path: "",
 		},
 		Namespace:    "loftsman",
 		ChartsSource: &interfaces.HelmChartsSource{},
