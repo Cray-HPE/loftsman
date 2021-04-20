@@ -64,6 +64,42 @@ jobs:
       tag_name: ${{ steps.get_tag_name.outputs.TAG_NAME }}
       is_pre_release: ${{ steps.determine_release_type.outputs.IS_PRE_RELEASE }}
       changelog: ${{ steps.read_changelog.outputs.content }}
+  build-and-release-container-image:
+    needs: test-and-initialize-release
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: build and save container image
+      run: |
+        docker build --build-arg "LOFTSMAN_VERSION=${{ needs.test-and-initialize-release.outputs.tag_name }}" -t loftsman-cli:${{ needs.test-and-initialize-release.outputs.tag_name }} .
+        docker save -o loftsman-cli.tar loftsman-cli:${{ needs.test-and-initialize-release.outputs.tag_name }}
+    - name: publish quay.io container image
+      run: |
+        docker tag loftsman-cli:${{ needs.test-and-initialize-release.outputs.tag_name }} quay.io/loftsman/loftsman-cli:${{ needs.test-and-initialize-release.outputs.tag_name }}
+        docker login --username "${{ secrets.QUAYIO_REPOSITORY_USERNAME }}" --password "${{ secrets.QUAYIO_REPOSITORY_PASSWORD }}" quay.io
+        docker push quay.io/loftsman/loftsman-cli:${{ needs.test-and-initialize-release.outputs.tag_name }}
+    - name: write container image tarball checksum
+      run: |
+        shasum -a 256 loftsman-cli.tar >> loftsman-cli.tar.sha256sum
+    - name: publish container image tarball
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: loftsman-cli.tar
+        asset_name: loftsman-cli-container-image.tar
+        tag: ${{ github.ref }}
+        body: ${{ needs.test-and-initialize-release.outputs.changelog }}
+        prerelease: ${{ needs.test-and-initialize-release.outputs.is_pre_release }}
+    - name: publish container image tarball checksum
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: loftsman-cli.tar.sha256sum
+        asset_name: loftsman-cli-container-image.tar.sha256sum
+        tag: ${{ github.ref }}
+        body: ${{ needs.test-and-initialize-release.outputs.changelog }}
+        prerelease: ${{ needs.test-and-initialize-release.outputs.is_pre_release }}
   build-and-release-binaries:
     needs: test-and-initialize-release
     strategy:
