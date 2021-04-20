@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/Cray-HPE/loftsman/internal"
 	"github.com/Cray-HPE/loftsman/internal/logger"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -113,7 +113,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVarP(&loftsman.Settings.JSONLog.Path, "json-log-path", "", loftsman.Settings.JSONLog.Path,
-		"Path to the file where JSON/machine-readable logs written, note that this is in addition to the stdout logs")
+		"Path to the file where JSON/machine-readable logs written, nothing written if empty/absent, note that this is in addition to the stdout logs")
 	rootCmd.PersistentFlags().StringVarP(&loftsman.Settings.Kubernetes.KubeconfigPath, "kubeconfig", "", loftsman.Settings.Kubernetes.KubeconfigPath,
 		"Path to the Kubernetes config file to use (default is the system default)")
 	rootCmd.PersistentFlags().StringVarP(&loftsman.Settings.Kubernetes.KubeContext, "kube-context", "", loftsman.Settings.Kubernetes.KubeContext,
@@ -180,9 +180,15 @@ func commonPreRun(cmd *cobra.Command, args []string) error {
 		fmt.Println(fmt.Sprintf("couldn't create temp directory at %s: %s", loftsman.Settings.TempDirectory, err))
 		return err
 	}
-	loftsman.Settings.JSONLog.File, err = os.OpenFile(loftsman.Settings.JSONLog.Path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
+	if loftsman.Settings.JSONLog.Path != "" {
+		pathInfo, err := os.Stat(loftsman.Settings.JSONLog.Path)
+		if err == nil && pathInfo.IsDir() {
+			loftsman.Settings.JSONLog.Path = filepath.Join(loftsman.Settings.JSONLog.Path, "loftsman.log")
+		}
+		loftsman.Settings.JSONLog.File, err = os.OpenFile(loftsman.Settings.JSONLog.Path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return fmt.Errorf("couldn't initialize JSON Log file at %s: %s", loftsman.Settings.JSONLog.Path, err)
+		}
 	}
 	commandString := cmd.Name()
 	for cmd.HasParent() {

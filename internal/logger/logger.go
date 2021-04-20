@@ -104,9 +104,15 @@ func (log *Logger) GetRecord() string {
 
 // New will return a new instance of a logger
 func New(jsonLogFile *os.File, commandName string) *Logger {
+	var multiWriter io.Writer
 	record = &strings.Builder{}
 	zerologConsoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
-	multiWriter := io.MultiWriter(consoleWriter{zerologConsoleWriter: zerologConsoleWriter}, jsonLogFile, record)
+	_, err := jsonLogFile.Stat()
+	if err == nil {
+		multiWriter = io.MultiWriter(consoleWriter{zerologConsoleWriter: zerologConsoleWriter}, jsonLogFile, record)
+	} else {
+		multiWriter = io.MultiWriter(consoleWriter{zerologConsoleWriter: zerologConsoleWriter}, record)
+	}
 	return &Logger{
 		zerolog.New(multiWriter).With().Str("command", commandName).Timestamp().Logger(),
 	}
