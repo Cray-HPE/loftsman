@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rs/zerolog"
-	yaml "gopkg.in/yaml.v2"
 	"github.com/Cray-HPE/loftsman/internal/interfaces"
 	"github.com/Cray-HPE/loftsman/internal/logger"
+	"github.com/rs/zerolog"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type releaseError struct {
@@ -123,14 +123,15 @@ func (m *Manifest) Release(kubernetes interfaces.Kubernetes, helm interfaces.Hel
 			continue
 		}
 
-		installUpgradeCmd := fmt.Sprintf(
-			"upgrade --install %s %s --namespace %s --create-namespace --set global.chart.name=%s --set global.chart.version=%s",
+		installUpgradeCmd := strings.TrimSpace(fmt.Sprintf(
+			"upgrade --install %s %s --namespace %s --create-namespace --set global.chart.name=%s --set global.chart.version=%s %s",
 			chart.Name,
 			chartPath,
 			chart.Namespace,
 			chart.Name,
 			chart.Version,
-		)
+			m.getHelmTimeoutArg(chart),
+		))
 		if chart.Values != nil {
 			valuesBytes, err := yaml.Marshal(chart.Values)
 			if err != nil {
@@ -154,4 +155,13 @@ func (m *Manifest) Release(kubernetes interfaces.Kubernetes, helm interfaces.Hel
 		logForChart(zerolog.InfoLevel, fmt.Sprintf("%s\n", output))
 	}
 	return releaseErrors
+}
+
+func (m *Manifest) getHelmTimeoutArg(chart *Chart) string {
+	if chart.Timeout != "" {
+		return fmt.Sprintf("--timeout %s", chart.Timeout)
+	} else if m.Spec.ChartTimeout != "" {
+		return fmt.Sprintf("--timeout %s", m.Spec.ChartTimeout)
+	}
+	return ""
 }

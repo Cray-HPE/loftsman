@@ -26,7 +26,8 @@ type Metadata struct {
 
 // Spec is the v1 schema spec object
 type Spec struct {
-	Charts []*Chart `yaml:"charts,omitempty" json:"charts,omitempty"`
+	ChartTimeout string   `yaml:"chartTimeout,omitempty" json:"chartTimeout,omitempty"`
+	Charts       []*Chart `yaml:"charts,omitempty" json:"charts,omitempty"`
 }
 
 // Chart is a v1 schema Chart object
@@ -35,6 +36,7 @@ type Chart struct {
 	Namespace string      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Version   string      `yaml:"version,omitempty" json:"version,omitempty"`
 	Values    interface{} `yaml:"values,omitempty" json:"-"` // json:"-" here is to ignore generic type validation, otherwise we'd get: json: unsupported type: map[interface {}]interface {}
+	Timeout   string      `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 }
 
 // Replace defines a single item in the list of a chart's "replaces" list
