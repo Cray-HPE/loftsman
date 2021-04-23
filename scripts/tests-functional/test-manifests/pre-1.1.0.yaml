@@ -1,0 +1,14 @@
+apiVersion: manifests/v1beta1
+metadata:
+  name: functional-tests-pre-1-1-0
+spec:
+  charts:
+  - name: consul
+    namespace: default
+    version: 0.31.1
+    values:
+      metrics:
+        enabled: true
+  - name: victoria-metrics-cluster
+    namespace: default
+    version: 0.8.24

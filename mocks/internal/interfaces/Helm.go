@@ -56,6 +56,22 @@ func (_m *Helm) GetAvailableChartVersions(chartName string) ([]*interfaces.HelmA
 	return r0, r1
 }
 
+// GetExecConfig provides a mock function with given fields:
+func (_m *Helm) GetExecConfig() *interfaces.HelmExecConfig {
+	ret := _m.Called()
+
+	var r0 *interfaces.HelmExecConfig
+	if rf, ok := ret.Get(0).(func() *interfaces.HelmExecConfig); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*interfaces.HelmExecConfig)
+		}
+	}
+
+	return r0
+}
+
 // GetReleaseStatus provides a mock function with given fields: chartName, chartNamespace
 func (_m *Helm) GetReleaseStatus(chartName string, chartNamespace string) (*interfaces.HelmReleaseStatus, error) {
 	ret := _m.Called(chartName, chartNamespace)

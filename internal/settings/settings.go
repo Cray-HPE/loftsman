@@ -47,9 +47,6 @@ func (s *Settings) ValidateChartsSource() error {
 	if s.ChartsSource.Repo != "" && s.ChartsSource.Path != "" {
 		return errors.New("both charts-repo and charts-path are set, you should use one or the other")
 	}
-	if s.ChartsSource.Repo == "" && s.ChartsSource.Path == "" {
-		return errors.New("one of charts-repo or charts-path is required")
-	}
 	if s.ChartsSource.Path != "" {
 		if _, err = os.Stat(s.ChartsSource.Path); os.IsNotExist(err) {
 			return fmt.Errorf("charts-path %s not found", s.ChartsSource.Path)

@@ -113,7 +113,8 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVarP(&loftsman.Settings.JSONLog.Path, "json-log-path", "", loftsman.Settings.JSONLog.Path,
-		"Path to the file where JSON/machine-readable logs written, nothing written if empty/absent, note that this is in addition to the stdout logs")
+		"Path to the file where JSON/machine-readable logs written, nothing written if empty/absent, note\n"+
+			"that this is in addition to the stdout logs")
 	rootCmd.PersistentFlags().StringVarP(&loftsman.Settings.Kubernetes.KubeconfigPath, "kubeconfig", "", loftsman.Settings.Kubernetes.KubeconfigPath,
 		"Path to the Kubernetes config file to use (default is the system default)")
 	rootCmd.PersistentFlags().StringVarP(&loftsman.Settings.Kubernetes.KubeContext, "kube-context", "", loftsman.Settings.Kubernetes.KubeContext,
@@ -127,20 +128,23 @@ func init() {
 		"A comma-delimited list of charts to initialize in the manifest")
 
 	shipCmd.PersistentFlags().StringVarP(&loftsman.Settings.ChartsSource.Repo, "charts-repo", "", "",
-		"The root URL for an external helm chart repo to use for installing/upgrading charts. (required if not using charts-path)")
+		"DEPRECATED in favor of manifest chartSources. The root URL for an external helm chart repo to use for\n"+
+			"installing/upgrading charts. (required if not using charts-path)")
 	shipCmd.PersistentFlags().StringVarP(&loftsman.Settings.ChartsSource.Path, "charts-path", "", "",
-		"Local path to a directory containing helm-packaged charts, e.g. files like my-chart-0.1.0.tgz (required if not using charts-repo)")
+		"DEPRECATED in favor of manifest chartSources. Local path to a directory containing helm-packaged charts,\n"+
+			"e.g. files like my-chart-0.1.0.tgz (required if not using charts-repo)")
 	shipCmd.PersistentFlags().StringVarP(&loftsman.Settings.ChartsSource.RepoUsername, "charts-repo-username", "", "",
-		"The username for charts-repo, if applicable")
+		"DEPRECATED in favor of manifest chartSources. The username for charts-repo, if applicable")
 	shipCmd.PersistentFlags().StringVarP(&loftsman.Settings.ChartsSource.RepoPassword, "charts-repo-password", "", "",
-		"The password for charts-repo, if applicable")
+		"DEPRECATED in favor of manifest chartSources. The password for charts-repo, if applicable")
 
 	shipCmd.PersistentFlags().StringVarP(&loftsman.Settings.Manifest.Path, manifestPathArgName, "", "",
-		"Local path to the Loftsman YAML manifest file, instruction on what charts to install and how to install them. See \n"+
-			"loftsman manifest --help for more info (required)")
+		"Local path to the Loftsman YAML manifest file, instruction on what charts to install and how to install them.\n"+
+			"See loftsman manifest --help for more info (required)")
 
 	avastCmd.PersistentFlags().StringVarP(&loftsman.Settings.Manifest.Path, manifestPathArgName, "", "",
-		"Local path to the Loftsman YAML mainfest file, by name it will determine the existing loftsman ship to halt (required if not using manifest-name)")
+		"Local path to the Loftsman YAML mainfest file, by name it will determine the existing loftsman ship to halt\n"+
+			"(required if not using manifest-name)")
 	avastCmd.PersistentFlags().StringVarP(&loftsman.Settings.Manifest.Name, "manifest-name", "", "",
 		fmt.Sprintf("The name of the manifest ship operation you want to halt (required if not using %s)", manifestPathArgName))
 

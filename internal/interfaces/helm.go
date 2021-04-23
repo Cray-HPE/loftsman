@@ -14,6 +14,7 @@ type HelmExecConfig struct {
 
 // HelmChartsSource is an object storing config for where our Helm charts exist
 type HelmChartsSource struct {
+	RepoName     string
 	Repo         string
 	RepoUsername string
 	RepoPassword string
@@ -43,4 +44,5 @@ type Helm interface {
 	Exec(subCommand string) (string, error)
 	GetAvailableChartVersions(chartName string) ([]*HelmAvailableChartVersion, error)
 	GetReleaseStatus(chartName string, chartNamespace string) (*HelmReleaseStatus, error)
+	GetExecConfig() *HelmExecConfig
 }

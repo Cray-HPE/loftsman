@@ -1,4 +1,4 @@
-// Package v1beta1 is manifest resources for the v1 schema
+// Package v1beta1 is manifest resources for the v1beta1 schema
 package v1beta1
 
 import (
@@ -8,9 +8,13 @@ import (
 const (
 	// APIVersion is the string representation of the api version of this schema
 	APIVersion = "manifests/v1beta1"
+	// ChartSourceTypeDirectory is the identifier for spec.source.charts[].type where charts exist in a local directory
+	ChartSourceTypeDirectory = "directory"
+	// ChartSourceTypeRepo is the identifier for spec.source.charts[].type where charts exist in a chart repository
+	ChartSourceTypeRepo = "repo"
 )
 
-// Manifest is the v1 manifest object, implements internal/interfaces/manifest.go
+// Manifest is the v1beta1 manifest object, implements internal/interfaces/manifest.go
 type Manifest struct {
 	logger        *logger.Logger
 	tempDirectory string
@@ -19,20 +23,46 @@ type Manifest struct {
 	Spec          *Spec     `yaml:"spec,omitempty" json:"spec,omitempty"`
 }
 
-// Metadata is the v1 schema metadata object
+// Metadata stores the meta info about the manifest
 type Metadata struct {
 	Name string `yaml:"name,omitempty" json:"name,omitempty"`
 }
 
-// Spec is the v1 schema spec object
+// Spec is the root of definitions and instructions for the manifest
 type Spec struct {
-	ChartTimeout string   `yaml:"chartTimeout,omitempty" json:"chartTimeout,omitempty"`
-	Charts       []*Chart `yaml:"charts,omitempty" json:"charts,omitempty"`
+	Sources *Sources `yaml:"sources,omitempty" json:"sources,omitempty"`
+	All     *Chart   `yaml:"all,omitempty" json:"all,omitempty"` // All is really a subset of *Chart, but we can restrict accepted parts via our schema
+	Charts  []*Chart `yaml:"charts,omitempty" json:"charts,omitempty"`
 }
 
-// Chart is a v1 schema Chart object
+// Sources contains info about artifact sources to use during loftsman shipping
+type Sources struct {
+	Charts []*ChartSource `yaml:"charts,omitempty" json:"charts,omitempty"`
+}
+
+// ChartSource is a local or remote location that can serve one or more packaged charts
+type ChartSource struct {
+	Type     string `yaml:"type,omitempty" json:"type,omitempty"`
+	Name     string `yaml:"name,omitempty" json:"name,omitempty"`
+	Location string `yaml:"location,omitempty" json:"location,omitempty"`
+	// all properties below here are not relevant to every ChartSource.Type, but will either
+	// just be used when needed/ignored otherwise for chart source types where they're irrelevant
+	CredentialsSecret *ChartSourceCredentialsSecret `yaml:"credentialsSecret,omitempty" json:"credentialsSecret,omitempty"`
+}
+
+// ChartSourceCredentialsSecret is a reference to a Kubernetes secret storing credentials for accessing
+// a chart source
+type ChartSourceCredentialsSecret struct {
+	Name        string `yaml:"name,omitempty" json:"name,omitempty"`
+	Namespace   string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	UsernameKey string `yaml:"usernameKey,omitempty" json:"usernameKey,omitempty"`
+	PasswordKey string `yaml:"passwordKey,omitempty" json:"passwordKey,omitempty"`
+}
+
+// Chart is a single chart to install/upgrade
 type Chart struct {
 	Name        string      `yaml:"name,omitempty" json:"name,omitempty"`
+	Source      string      `yaml:"source,omitempty" json:"source,omitempty"`
 	ReleaseName string      `yaml:"releaseName,omitempty" json:"releaseName,omitempty"`
 	Namespace   string      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Version     string      `yaml:"version,omitempty" json:"version,omitempty"`
