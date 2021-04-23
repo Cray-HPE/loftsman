@@ -140,3 +140,8 @@ func (h *Helm) GetReleaseStatus(chartName string, chartNamespace string) (*inter
 	}
 	return rs, nil
 }
+
+// GetExecConfig returns the existing ExecConfig
+func (h *Helm) GetExecConfig() *interfaces.HelmExecConfig {
+	return h.ExecConfig
+}

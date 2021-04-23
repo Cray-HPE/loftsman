@@ -1,10 +1,15 @@
 package mocks
 
 import (
-	"github.com/stretchr/testify/mock"
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetesmocks "github.com/Cray-HPE/loftsman/mocks/interfaces"
+	"github.com/stretchr/testify/mock"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	// TestSecretKeyValue is just a mock value always returns when using GetSecretKeyValue
+	TestSecretKeyValue = "secret"
 )
 
 // GetKubernetesMock will return a common mock for the Kubernetes interface/object
@@ -28,5 +33,6 @@ func GetKubernetesMock(triggerFoundConfigMap bool) *kubernetesmocks.Kubernetes {
 	}, nil)
 	k.On("InitializeConfigMap", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).Return(&v1.ConfigMap{}, nil)
 	k.On("PatchConfigMap", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).Return(&v1.ConfigMap{}, nil)
+	k.On("GetSecretKeyValue", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(TestSecretKeyValue, nil)
 	return k
 }

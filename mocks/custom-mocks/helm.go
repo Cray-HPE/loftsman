@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/stretchr/testify/mock"
 	helminterface "github.com/Cray-HPE/loftsman/internal/interfaces"
 	helmmocks "github.com/Cray-HPE/loftsman/mocks/interfaces"
+	"github.com/stretchr/testify/mock"
 )
 
 // GetHelmMock will return a common mock for the Helm interface/object
@@ -35,5 +35,6 @@ func GetHelmMock(availableChartVersions []*helminterface.HelmAvailableChartVersi
 		}
 		return rs
 	}, nil)
+	h.On("GetExecConfig").Return(&helminterface.HelmExecConfig{})
 	return h
 }

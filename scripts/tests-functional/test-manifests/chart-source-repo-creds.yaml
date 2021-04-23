@@ -1,0 +1,26 @@
+apiVersion: manifests/v1beta1
+metadata:
+  name: functional-tests-full
+spec:
+  sources:
+    charts:
+    - type: repo
+      name: chartmuseum
+      location: http://localhost:8080
+      credentialsSecret:
+        name: repo-creds
+        namespace: default
+        usernameKey: username
+        passwordKey: password
+  charts:
+  - name: consul
+    source: chartmuseum
+    namespace: default
+    version: 0.31.1
+    values:
+      metrics:
+        enabled: true
+  - name: victoria-metrics-cluster
+    source: chartmuseum
+    namespace: default
+    version: 0.8.24

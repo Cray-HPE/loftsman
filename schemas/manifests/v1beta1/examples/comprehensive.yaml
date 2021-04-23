@@ -2,11 +2,40 @@ apiVersion: manifests/v1beta1
 metadata:
   name: simple-manifest
 spec:
-  chartTimeout: 10m0s # override default Helm install/upgrade timeout for any chart, a go duration: https://golang.org/pkg/time/#ParseDuration
+  # sources.charts is our working idea moving forward for pointing Loftsman at different locations
+  # containing Helm charts to pull for install/upgrade during a Loftsman ship. The --charts-* cli args
+  # are deprecated as of Loftsman 1.1.0, and are planned for being phased out by Loftsman v2.x
+  sources:
+    # using spec.sources.charts will take precedence over the --charts-* CLI args
+    charts:
+    - type: directory      # two types currently supported: [directory, repo]
+      name: local          # a source name should be unique in the context of the entire manifest
+      location: ./charts   # can be relative to the path at which you're running `loftsman ship`
+    - type: repo
+      name: myorgrepo
+      location: https://charts.my.org/
+      # If you're dealing with a protected/secured Helm chart repo, you can pre-populate a secret in
+      # Kubernetes with the repo username/password so that Loftsman can authenticate to pull charts
+      # from there.
+      # We're still figuring out where to go with supporting auth mechanisms here around Helm support (SSL auth, OCI support),
+      # but if you have a general helm repo/museum with username/password capbilities, you should be good using these values
+      credentialsSecret:
+        name: myorg-charts-repo-credentials  # the name of the Kubernetes secret
+        namespace: default      # the namespace where the secret lives
+        usernameKey: username   # the secret data key storing the username
+        passwordKey: password   # the secret data key storing the password
+  # 'all' allows a way to set certain properties or default property values automatically on each spec.charts[] without having to
+  # repeat for each one. Everything under this property will be merged with the same properties of each chart as we go through the ship,
+  # the values set in the spec.charts[] entry taking precedence.
+  # Current supported properties to override (the plan is to be able to add support for others like values as well as we move towards 2.x):
+  #   * timeout
+  all:
+    timeout: 10m0s # set default Helm install/upgrade timeout for every chart, a go duration: https://golang.org/pkg/time/#ParseDuration
   charts:
-  - name: my-chart-1   # the name of the chart
-    namespace: default # the namespace where your chart's resources should live
-    version: 1.0.0     # the version of your chart to install
+  - name: my-chart-1     # the name of the chart
+    source: local        # as defined in a sources.charts[].name, this must be set if you're using sources.*
+    namespace: default   # the namespace where your chart's resources should live
+    version: 1.0.0       # the version of your chart to install
     # The values property allows passing in value overrides to your chart install/upgrade
     # e.g. https://helm.sh/docs/chart_template_guide/values_files/
     values:
@@ -15,7 +44,8 @@ spec:
   # and further charts to be installed or upgraded. Loftsman will go through this charts
   # list and install in order.
   - name: my-chart-2
-    releaseName: my-chart-2-release # by default, the Helm release name will just be the chart name, but you can override it here
-    namespace: another-namespace # the namespace will be created if it doesn't already exist
-    version: 1.7.5
-    timeout: 12m30s # you can also override the Helm install/upgrade timeout on a per-chart basis
+    source: myorgrepo                 # as defined in a sources.charts[].name, this must be set if you're using sources.*
+    releaseName: my-chart-2-release   # by default, the Helm release name will just be the chart name, but you can override it here
+    namespace: another-namespace      # the namespace will be created if it doesn't already exist
+    version: 1.7.5                    # the version of the packaged chart to install
+    timeout: 12m30s                   # you can also set the Helm install/upgrade timeout on a per-chart basis, will take precedence over all.timeout

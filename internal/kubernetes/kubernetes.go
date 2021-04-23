@@ -5,15 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	k8s "k8s.io/client-go/kubernetes"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
+
 	// Imported to support the fact that alternative client-go auth mechansims are not included
 	// by default in the client-go default usage itself
 	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
@@ -163,7 +165,7 @@ func (k *Kubernetes) InitializeConfigMap(name string, namespace string, data map
 		result.ObjectMeta.Annotations[previousDataAnnotationKey] = string(previousData)
 		patchData, err := json.Marshal(v1.ConfigMap{
 			ObjectMeta: result.ObjectMeta,
-			Data: data,
+			Data:       data,
 		})
 		result, err = k.client.CoreV1().ConfigMaps(namespace).Patch(context.Background(), name,
 			types.StrategicMergePatchType, []byte(patchData), metav1.PatchOptions{})
@@ -186,6 +188,22 @@ func (k *Kubernetes) PatchConfigMap(name string, namespace string, data map[stri
 		result, err = k.client.CoreV1().ConfigMaps(namespace).Patch(context.Background(), name,
 			types.StrategicMergePatchType, []byte(patchData), metav1.PatchOptions{})
 		return err
+	})
+	return result, err
+}
+
+// GetSecretKeyValue will retrieve a particular data key from a secret
+func (k *Kubernetes) GetSecretKeyValue(secretName string, namespace string, dataKey string) (string, error) {
+	var err error
+	var secret *v1.Secret
+	var result string
+	err = retry.OnError(retry.DefaultBackoff, k.IsRetryError, func() error {
+		secret, err = k.client.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+		result = strings.TrimSpace(string(secret.Data[dataKey]))
+		return nil
 	})
 	return result, err
 }

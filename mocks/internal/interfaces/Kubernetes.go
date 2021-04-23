@@ -49,6 +49,27 @@ func (_m *Kubernetes) FindConfigMap(name string, namespace string, withKey strin
 	return r0, r1
 }
 
+// GetSecretKeyValue provides a mock function with given fields: secretName, namespace, dataKey
+func (_m *Kubernetes) GetSecretKeyValue(secretName string, namespace string, dataKey string) (string, error) {
+	ret := _m.Called(secretName, namespace, dataKey)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string, string, string) string); ok {
+		r0 = rf(secretName, namespace, dataKey)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, string) error); ok {
+		r1 = rf(secretName, namespace, dataKey)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Initialize provides a mock function with given fields: kubeconfigPath, kubeContext
 func (_m *Kubernetes) Initialize(kubeconfigPath string, kubeContext string) error {
 	ret := _m.Called(kubeconfigPath, kubeContext)

@@ -24,16 +24,6 @@ func TestValidateChartsSourceWithChartsPathAndRepo(t *testing.T) {
 	}
 }
 
-func TestValidateChartsSourceWithMissingSettings(t *testing.T) {
-	s := New()
-	s.ChartsSource.Path = ""
-	s.ChartsSource.Repo = ""
-	err := s.ValidateChartsSource()
-	if err == nil || !strings.Contains(err.Error(), "charts-repo or charts-path is required") {
-		t.Errorf("Didn't get expected error when settings.ChartsSource.Path and settings.ChartsSource.Repo are both unset, got: %s", err)
-	}
-}
-
 func TestValidateChartsSourceChartsPathInvalid(t *testing.T) {
 	s := New()
 	s.ChartsSource.Path = "/path/that/does/not/exist/charts.tar.gz"

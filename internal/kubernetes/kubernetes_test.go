@@ -150,3 +150,18 @@ func TestPatchConfigMap(t *testing.T) {
 		t.Errorf("Got unexpected error from kubernetes.TestPatchConfigMap(): %s", err)
 	}
 }
+
+func TestGetSecretKeyValue(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", `=~http://loftsman-tests`, httpmock.NewStringResponder(200, `{"metadata": {"name": "secret-name", "namespace": "default"}, "data": {"test-key": "dGVzdC12YWx1ZQo="}}`))
+	k := &Kubernetes{}
+	_ = k.Initialize("./.test-fixtures/kubeconfig.yaml", "default")
+	value, err := k.GetSecretKeyValue("secret-name", "default", "test-key")
+	if err != nil {
+		t.Errorf("Got unexpected error from kubernetes.TestGetSecretKeyValue(): %s", err)
+	}
+	if value != "test-value" {
+		t.Errorf("Got unexpected value from kubernetes.TestGetSecretKeyValue(): %s", value)
+	}
+}

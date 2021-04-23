@@ -52,6 +52,29 @@ spec:
 	}
 }
 
+func TestLoadWithAll(t *testing.T) {
+	manifest := &Manifest{}
+	manifestContent := `---
+apiVersion: manifests/v1beta1
+metadata:
+  name: test-manifest
+spec:
+  all:
+    timeout: 10m0s
+  charts:
+  - name: chart1
+    namespace: default
+    version: 1.0.0
+`
+	err := manifest.Load(manifestContent)
+	if err != nil {
+		t.Errorf("Got unexpected error from manifest.v1beta1.TestLoadWithAll(): %s", err)
+	}
+	if manifest.Spec.Charts[0].Timeout != "10m0s" {
+		t.Errorf("Didn't find expected manifest.Spec.Charts[0].Timeout value of 10m0s from manifest.v1beta.TestLoadWithAll(), instead got: %s", manifest.Spec.Charts[0].Timeout)
+	}
+}
+
 func TestCreateNoCharts(t *testing.T) {
 	manifest := &Manifest{}
 	created, err := manifest.Create([]string{})
@@ -250,7 +273,8 @@ func TestGlobalChartTimeout(t *testing.T) {
 		},
 	}
 	manifest := getTestManifest()
-	manifest.Spec.ChartTimeout = "10m0s"
+	manifest.Spec.All = &Chart{}
+	manifest.Spec.All.Timeout = "10m0s"
 	manifest.Spec.Charts = []*Chart{
 		&Chart{
 			Name:      "full-chart",
@@ -317,5 +341,135 @@ func TestCustomReleaseName(t *testing.T) {
 	errs := manifest.Release(custommocks.GetKubernetesMock(false), custommocks.GetHelmMock(availableChartVersions))
 	if len(errs) != 0 {
 		t.Errorf("Got unexpected errors from manifest.v1beta1.TestCustomReleaseName(): %s", errsToString(errs))
+	}
+}
+
+func TestChartSourceLocal(t *testing.T) {
+	availableChartVersions := []*interfaces.HelmAvailableChartVersion{
+		&interfaces.HelmAvailableChartVersion{
+			Version: "0.0.1",
+			Path:    "/tmp/full-chart-0.0.1.tgz",
+		},
+	}
+	manifest := getTestManifest()
+	manifest.Spec.Sources = &Sources{
+		[]*ChartSource{
+			&ChartSource{
+				Type:     ChartSourceTypeDirectory,
+				Name:     "local",
+				Location: "/tmp",
+			},
+		},
+	}
+	manifest.Spec.Charts = []*Chart{
+		&Chart{
+			Name:      "full-chart",
+			Source:    "local",
+			Namespace: "default",
+			Version:   "0.0.1",
+		},
+	}
+	errs := manifest.Release(custommocks.GetKubernetesMock(false), custommocks.GetHelmMock(availableChartVersions))
+	if len(errs) != 0 {
+		t.Errorf("Got unexpected errors from manifest.v1beta1.TestChartSourceLocal(): %s", errsToString(errs))
+	}
+}
+
+func TestChartSourceNotFound(t *testing.T) {
+	availableChartVersions := []*interfaces.HelmAvailableChartVersion{
+		&interfaces.HelmAvailableChartVersion{
+			Version: "0.0.1",
+			Path:    "/tmp/full-chart-0.0.1.tgz",
+		},
+	}
+	manifest := getTestManifest()
+	manifest.Spec.Sources = &Sources{
+		[]*ChartSource{
+			&ChartSource{
+				Type:     ChartSourceTypeDirectory,
+				Name:     "local",
+				Location: "/tmp",
+			},
+		},
+	}
+	manifest.Spec.Charts = []*Chart{
+		&Chart{
+			Name:      "full-chart",
+			Source:    "source-not-defined",
+			Namespace: "default",
+			Version:   "0.0.1",
+		},
+	}
+	errs := manifest.Release(custommocks.GetKubernetesMock(false), custommocks.GetHelmMock(availableChartVersions))
+	if len(errs) == 0 {
+		t.Errorf("Didn't get expected error from manifest.v1beta1.TestChartSourceNotFound()")
+	}
+}
+
+func TestChartSourceRepo(t *testing.T) {
+	availableChartVersions := []*interfaces.HelmAvailableChartVersion{
+		&interfaces.HelmAvailableChartVersion{
+			Version: "0.0.1",
+			Path:    "https://charts/full-chart-0.0.1.tgz",
+		},
+	}
+	manifest := getTestManifest()
+	manifest.Spec.Sources = &Sources{
+		[]*ChartSource{
+			&ChartSource{
+				Type:     ChartSourceTypeRepo,
+				Name:     "remote",
+				Location: "https://charts",
+			},
+		},
+	}
+	manifest.Spec.Charts = []*Chart{
+		&Chart{
+			Name:      "full-chart",
+			Source:    "remote",
+			Namespace: "default",
+			Version:   "0.0.1",
+		},
+	}
+	errs := manifest.Release(custommocks.GetKubernetesMock(false), custommocks.GetHelmMock(availableChartVersions))
+	if len(errs) != 0 {
+		t.Errorf("Got unexpected errors from manifest.v1beta1.TestChartSourceRepo(): %s", errsToString(errs))
+	}
+}
+
+func TestChartSourceRepoCredentials(t *testing.T) {
+	availableChartVersions := []*interfaces.HelmAvailableChartVersion{
+		&interfaces.HelmAvailableChartVersion{
+			Version: "0.0.1",
+			Path:    "https://charts/full-chart-0.0.1.tgz",
+		},
+	}
+	manifest := getTestManifest()
+	manifest.Spec.Sources = &Sources{
+		[]*ChartSource{
+			&ChartSource{
+				Type:     ChartSourceTypeRepo,
+				Name:     "remote",
+				Location: "https://charts",
+				CredentialsSecret: &ChartSourceCredentialsSecret{
+					Name:        "repo-creds",
+					Namespace:   "default",
+					UsernameKey: "username",
+					PasswordKey: "password",
+				},
+			},
+		},
+	}
+	manifest.Spec.Charts = []*Chart{
+		&Chart{
+			Name:      "full-chart",
+			Source:    "remote",
+			Namespace: "default",
+			Version:   "0.0.1",
+		},
+	}
+	errs := manifest.Release(custommocks.GetKubernetesMock(false), custommocks.GetHelmMock(availableChartVersions))
+	if len(errs) != 0 {
+		t.Errorf("Got unexpected errors from manifest.v1beta1.TestChartSourceRepoCredentials(): %s", errsToString(errs))
 	}
 }
