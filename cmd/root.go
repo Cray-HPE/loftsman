@@ -128,15 +128,15 @@ func init() {
 		"A comma-delimited list of charts to initialize in the manifest")
 
 	shipCmd.PersistentFlags().StringVarP(&loftsman.Settings.ChartsSource.Repo, "charts-repo", "", "",
-		"DEPRECATED in favor of manifest chartSources. The root URL for an external helm chart repo to use for\n"+
-			"installing/upgrading charts. (required if not using charts-path)")
+		"DEPRECATED in favor of manifest spec.sources.charts. The root URL for an external helm chart repo to use for\n"+
+			"installing/upgrading charts")
 	shipCmd.PersistentFlags().StringVarP(&loftsman.Settings.ChartsSource.Path, "charts-path", "", "",
-		"DEPRECATED in favor of manifest chartSources. Local path to a directory containing helm-packaged charts,\n"+
-			"e.g. files like my-chart-0.1.0.tgz (required if not using charts-repo)")
+		"DEPRECATED in favor of manifest spec.sources.charts. Local path to a directory containing helm-packaged charts,\n"+
+			"e.g. files like my-chart-0.1.0.tgz")
 	shipCmd.PersistentFlags().StringVarP(&loftsman.Settings.ChartsSource.RepoUsername, "charts-repo-username", "", "",
-		"DEPRECATED in favor of manifest chartSources. The username for charts-repo, if applicable")
+		"DEPRECATED in favor of manifest spec.sources.charts. The username for charts-repo, if applicable")
 	shipCmd.PersistentFlags().StringVarP(&loftsman.Settings.ChartsSource.RepoPassword, "charts-repo-password", "", "",
-		"DEPRECATED in favor of manifest chartSources. The password for charts-repo, if applicable")
+		"DEPRECATED in favor of manifest spec.sources.charts. The password for charts-repo, if applicable")
 
 	shipCmd.PersistentFlags().StringVarP(&loftsman.Settings.Manifest.Path, manifestPathArgName, "", "",
 		"Local path to the Loftsman YAML manifest file, instruction on what charts to install and how to install them.\n"+

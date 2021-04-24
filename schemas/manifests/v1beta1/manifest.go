@@ -93,8 +93,6 @@ func (m *Manifest) Release(kubernetes interfaces.Kubernetes, helm interfaces.Hel
 
 CHARTS:
 	for _, chart := range m.Spec.Charts {
-		data, _ := yaml.Marshal(chart)
-		fmt.Println(string(data))
 		logForChart := func(level zerolog.Level, msg string) {
 			if strings.TrimSpace(msg) == "" {
 				return
