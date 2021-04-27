@@ -40,22 +40,6 @@ func (m *Manifest) Load(manifestContent string) error {
 	if err := yaml.Unmarshal([]byte(manifestContent), &m); err != nil {
 		return err
 	}
-	// We haven't yet validated our resulting, loaded manifest, so we can't assume anything is initialized
-	// TODO: is this going to be a good idea thinking about validating a manifest that's been modified instead
-	//       of always just the original? Not something we have to definitely answer on this round while supporting
-	//       just all.timeout, but when we get to some more generic possibilities (see comment below) we'll
-	//       probably want to settle on some answers
-	if m.Spec != nil && len(m.Spec.Charts) > 0 {
-		for _, chart := range m.Spec.Charts {
-			if m.Spec.All != nil {
-				// TODO: we'll eventually use some generic merge capability here, since we're only supporting all.timeout
-				//       for now, we can simply assume that's the only thing we care about
-				if m.Spec.All.Timeout != "" && chart.Timeout == "" {
-					chart.Timeout = m.Spec.All.Timeout
-				}
-			}
-		}
-	}
 	return nil
 }
 
@@ -134,6 +118,9 @@ CHARTS:
 		// TODO: when we're able to deprecate --charts-* CLI args, we can move to some slightly cleaner patterns here. In order to continue to
 		//       support both manifest-defined chart sources and the CLI ones, and doing as little as possible around it for now, this is deemed the
 		//       best path
+		if m.Spec.All != nil && m.Spec.All.Timeout != "" && chart.Timeout == "" {
+			chart.Timeout = m.Spec.All.Timeout
+		}
 		extraCmdArgs := ""
 		helmChartsSource := &interfaces.HelmChartsSource{}
 		if m.Spec.Sources != nil && len(m.Spec.Sources.Charts) > 0 {
