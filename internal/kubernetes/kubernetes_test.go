@@ -165,3 +165,18 @@ func TestGetSecretKeyValue(t *testing.T) {
 		t.Errorf("Got unexpected value from kubernetes.TestGetSecretKeyValue(): %s", value)
 	}
 }
+
+func TestGetSecretKeyValueKeyDoesntExist(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", `=~http://loftsman-tests`, httpmock.NewStringResponder(200, `{"metadata": {"name": "secret-name", "namespace": "default"}, "data": {"test-key": "dGVzdC12YWx1ZQo="}}`))
+	k := &Kubernetes{}
+	_ = k.Initialize("./.test-fixtures/kubeconfig.yaml", "default")
+	value, err := k.GetSecretKeyValue("secret-name", "default", "key-doesnt-exist")
+	if err != nil {
+		t.Errorf("Got unexpected error from kubernetes.TestGetSecretKeyValueKeyDoesntExist(): %s", err)
+	}
+	if value != "" {
+		t.Errorf("Got unexpected value from kubernetes.TestGetSecretKeyValueKeyDoesntExist(): %s", value)
+	}
+}
