@@ -52,29 +52,6 @@ spec:
 	}
 }
 
-func TestLoadWithAll(t *testing.T) {
-	manifest := &Manifest{}
-	manifestContent := `---
-apiVersion: manifests/v1beta1
-metadata:
-  name: test-manifest
-spec:
-  all:
-    timeout: 10m0s
-  charts:
-  - name: chart1
-    namespace: default
-    version: 1.0.0
-`
-	err := manifest.Load(manifestContent)
-	if err != nil {
-		t.Errorf("Got unexpected error from manifest.v1beta1.TestLoadWithAll(): %s", err)
-	}
-	if manifest.Spec.Charts[0].Timeout != "10m0s" {
-		t.Errorf("Didn't find expected manifest.Spec.Charts[0].Timeout value of 10m0s from manifest.v1beta.TestLoadWithAll(), instead got: %s", manifest.Spec.Charts[0].Timeout)
-	}
-}
-
 func TestCreateNoCharts(t *testing.T) {
 	manifest := &Manifest{}
 	created, err := manifest.Create([]string{})
