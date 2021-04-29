@@ -1,4 +1,4 @@
-### 1.1.0-beta1 Changelog
+### 1.1.0 Changelog
 
 * Support for pointing at multiple chart sources, both local and remote, added to manifest schema
 * Implement a global and per-chart Helm install/upgrade timeout override in the manifest
