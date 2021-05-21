@@ -6,7 +6,7 @@ set -o pipefail
 minimum_coverage_percentage=80
 
 this_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-cd /tmp
+pushd /tmp
 
 if ! command -v golint &>/dev/null; then
   go get -u golang.org/x/lint/golint
@@ -16,7 +16,7 @@ if ! command -v golint &>/dev/null; then
   golint="$GOPATH/bin/golint"
 fi
 
-cd $this_dir/../
+pushd $this_dir/../
 lint_result=$($golint ./...)
 if [[ ! -z "$lint_result" ]]; then
   echo "Lint failed: $lint_result"
