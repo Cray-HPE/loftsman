@@ -10,6 +10,9 @@ spec:
     - type: repo
       name: victoria-metrics
       location: https://victoriametrics.github.io/helm-charts/
+    - type: repo
+      name: chartmuseum
+      location: https://chartmuseum.github.io/charts
   all:
     timeout: 2m0s
   charts:
@@ -26,3 +29,7 @@ spec:
     namespace: default
     releaseName: vmetrics
     version: 0.8.24
+  - name: chartmuseum
+    source: chartmuseum
+    namespace: default
+    version: 3.1.0

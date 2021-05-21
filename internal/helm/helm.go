@@ -111,7 +111,11 @@ func (h *Helm) GetAvailableChartVersions(chartName string) ([]*interfaces.HelmAv
 			if entryChartName == chartName {
 				for _, version := range entryChartVersions {
 					urlPath := version.URLs[0]
-					if !strings.Contains(urlPath, h.ChartsSource.Repo) {
+					isFullURL, err := regexp.MatchString("^http(s)?://", urlPath)
+					if err != nil {
+						return available, err
+					}
+					if !isFullURL {
 						fullURL, _ := url.Parse(h.ChartsSource.Repo)
 						fullURL.Path = path.Join(fullURL.Path, version.URLs[0])
 						urlPath = fullURL.String()
