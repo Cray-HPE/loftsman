@@ -37,7 +37,7 @@ type Spec struct {
 
 // Sources contains info about artifact sources to use during loftsman shipping
 type Sources struct {
-	Charts []*ChartSource `yaml:"charts,omitempty" json:"charts,omitempty"`
+	Charts []*ChartSource `yaml:"charts" json:"charts"`
 }
 
 // ChartSource is a local or remote location that can serve one or more packaged charts

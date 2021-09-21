@@ -59,6 +59,9 @@ func (m *Manifest) Create(initializeCharts []string) (string, error) {
 			Name: "",
 		},
 		Spec: &Spec{
+			Sources: &Sources{
+				Charts: []*ChartSource{},
+			},
 			Charts: charts,
 		},
 	}
