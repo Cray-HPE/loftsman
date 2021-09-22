@@ -67,15 +67,13 @@ In the example manifest, we'll define it to use and ship a few community-provide
 ```
 $ mkdir -p loftsman-workspace/charts
 $ cd loftsman-workspace
-$ helm repo add bitnami https://charts.bitnami.com/bitnami
 $ helm repo add victoria-metrics https://victoriametrics.github.io/helm-charts
 $ helm repo update
-$ helm pull --version 9.2.8 -d ./charts/ bitnami/consul
 $ helm pull --version 0.8.24 -d ./charts/ victoria-metrics/victoria-metrics-cluster
 $ ls charts/
-consul-9.2.8.tgz			victoria-metrics-cluster-0.8.24.tgz
+victoria-metrics-cluster-0.8.24.tgz
 ```
-We now have two packaged Helm charts downloaded and ready for install into a cluster. Time to move over to defining a new manifest to use these charts.
+We've downloaded one of our charts locally, and we'll install another from a remote Helm repo location. Time to move over to defining a new manifest to use these charts.
 
 Manifests are meant to be easy to read and maintain, so it's pretty easy to get started and understand the options available to you. It's recommended that you use the Loftsman CLI itself for getting started with any new manifest:
 
@@ -84,6 +82,8 @@ $ loftsman manifest create
 apiVersion: manifests/v1beta1
 metadata: {}
 spec:
+  sources:
+    charts: []
   charts:
   - {}
 ```
@@ -99,11 +99,21 @@ apiVersion: manifests/v1beta1
 metadata:
   name: my-first-manifest
 spec:
+  sources:
+    charts:
+    - type: directory
+      name: local
+      location: ./charts
+    - type: repo
+      name: hashicorp
+      location: https://helm.releases.hashicorp.com
   charts:
   - name: consul
-    version: 9.2.8
+    source: hashicorp
+    version: 0.33.0
     namespace: default
   - name: victoria-metrics-cluster
+    source: local
     version: 0.8.24
     namespace: default
 ```
@@ -134,7 +144,6 @@ Here's the current state of our local workspace:
 ```
 .
 ├── charts
-│   ├── consul-9.2.8.tgz
 │   └── victoria-metrics-cluster-0.8.24.tgz
 └── manifest.yaml
 
@@ -144,9 +153,9 @@ Here's the current state of our local workspace:
 So, let's run `loftsman ship` with our defined manifest:
 
 ```
-$ loftsman ship --charts-path ./charts --manifest-path ./manifest.yaml
-2021-04-10T17:37:43-06:00 INF Initializing the connection to the Kubernetes cluster using KUBECONFIG (system default), and context (current-context) command=ship
-2021-04-10T17:37:44-06:00 INF Initializing helm client object command=ship
+$ loftsman ship --manifest-path ./manifest.yaml
+2021-09-21T11:41:02-06:00 INF Initializing the connection to the Kubernetes cluster using KUBECONFIG (system default), and context (current-context) command=ship
+2021-09-21T11:41:02-06:00 INF Initializing helm client object command=ship
          |\
          | \
          |  \
@@ -154,39 +163,45 @@ $ loftsman ship --charts-path ./charts --manifest-path ./manifest.yaml
        \--||___/
   ~~~~~~\_____/~~~~~~~
 
-2021-04-10T17:37:44-06:00 INF Ensuring that the loftsman namespace exists command=ship
-2021-04-10T17:37:44-06:00 INF Loftsman will use the packaged charts at ./charts as the Helm install source command=ship
-2021-04-10T17:37:44-06:00 INF Running a release for the provided manifest at ./manifest.yaml command=ship
+2021-09-21T11:41:02-06:00 INF Ensuring that the loftsman namespace exists command=ship
+2021-09-21T11:41:02-06:00 INF Running a release for the provided manifest at ./manifest.yaml command=ship
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Releasing consul v9.2.8
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Releasing consul v0.33.0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-2021-04-10T17:37:45-06:00 INF Running helm install/upgrade with arguments: upgrade --install consul charts/consul-9.2.8.tgz --namespace default --create-namespace --set global.chart.name=consul --set global.chart.version=9.2.8 chart=consul command=ship namespace=default version=9.2.8
-2021-04-10T17:37:50-06:00 INF Release "consul" does not exist. Installing it now.
+2021-09-21T11:41:02-06:00 INF Running helm install/upgrade with arguments: upgrade --install consul https://helm.releases.hashicorp.com/consul-0.33.0.tgz --namespace default --create-namespace --set global.chart.name=consul --set global.chart.version=0.33.0 chart=consul command=ship namespace=default version=0.33.0
+2021-09-21T11:41:07-06:00 INF Release "consul" does not exist. Installing it now.
 NAME: consul
-LAST DEPLOYED: Sat Apr 10 17:37:48 2021
+LAST DEPLOYED: Tue Sep 21 11:41:06 2021
 NAMESPACE: default
 STATUS: deployed
 REVISION: 1
-TEST SUITE: None
 NOTES:
-** Please be patient while the chart is being deployed **
+Thank you for installing HashiCorp Consul!
 
-  Consul can be accessed within the cluster on port 8300 at consul-headless.default.svc.cluster.local
+Now that you have deployed Consul, you should look over the docs on using
+Consul with Kubernetes available here:
 
-In order to access to the Consul Web UI:
+https://www.consul.io/docs/platform/k8s/index.html
 
-[redacted]
+
+Your release is named consul.
+
+To learn more about the release, run:
+
+  $ helm status consul
+  $ helm get all consul
+ chart=consul command=ship namespace=default version=0.33.0
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Releasing victoria-metrics-cluster v0.8.24
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-2021-04-10T17:37:50-06:00 INF Running helm install/upgrade with arguments: upgrade --install victoria-metrics-cluster charts/victoria-metrics-cluster-0.8.24.tgz --namespace default --create-namespace --set global.chart.name=victoria-metrics-cluster --set global.chart.version=0.8.24 chart=victoria-metrics-cluster command=ship namespace=default version=0.8.24
-2021-04-10T17:37:56-06:00 INF Release "victoria-metrics-cluster" does not exist. Installing it now.
+2021-09-21T11:41:07-06:00 INF Running helm install/upgrade with arguments: upgrade --install victoria-metrics-cluster charts/victoria-metrics-cluster-0.8.24.tgz --namespace default --create-namespace --set global.chart.name=victoria-metrics-cluster --set global.chart.version=0.8.24 chart=victoria-metrics-cluster command=ship namespace=default version=0.8.24
+2021-09-21T11:41:09-06:00 INF Release "victoria-metrics-cluster" does not exist. Installing it now.
 NAME: victoria-metrics-cluster
-LAST DEPLOYED: Sat Apr 10 17:37:53 2021
+LAST DEPLOYED: Tue Sep 21 11:41:09 2021
 NAMESPACE: default
 STATUS: deployed
 REVISION: 1
@@ -197,38 +212,45 @@ Write API:
 The Victoria Metrics write api can be accessed via port 8480 on the following DNS name from within your cluster:
 victoria-metrics-cluster-vminsert.default.svc.cluster.local
 
-Get the Victoria Metrics insert service URL by running these commands in the same shell:
-  export POD_NAME=$(kubectl get pods --namespace default -l "app=vminsert" -o jsonpath="{.items[0].metadata.name}")
-  kubectl --namespace default port-forward $POD_NAME 8480
-
-You need to update your prometheus configuration file and add next lines into it:
-
 [redacted]
 
  chart=victoria-metrics-cluster command=ship namespace=default version=0.8.24
-2021-04-10T17:37:56-06:00 INF Ship status: success. Recording status, manifest, and log data to configmap loftsman-my-first-manifest in namespace loftsman command=ship
+2021-09-21T11:41:09-06:00 INF Ship status: success. Recording status, manifest, and log data to configmap loftsman-my-first-manifest in namespace loftsman command=ship
 ```
 
 Great! We've shipped our system which includes two charts with various workloads in this example. We have a result and record of the ship operation per our logs:
 
 ```
-2021-04-10T17:37:56-06:00 INF Ship status: success. Recording status, manifest, and log data to configmap loftsman-my-first-manifest in namespace loftsman command=ship
+2021-09-21T11:41:09-06:00 INF Ship status: success. Recording status, manifest, and log data to configmap loftsman-my-first-manifest in namespace loftsman command=ship
 ```
  _NOTE: if any of our Helm charts had failed to install, we'd get a clear indication of that at the end of this log. Loftsman won't consider an install of one chart an overall failure, rather will aggregate these failures and report them at the end of the log._
 
  We also have a record of the manifest and it's logs now store in our cluster so we can reference it.
 
- ### Options for Shipping
+ ### Secure, remote Helm chart repos
 
- We just saw an example of shipping a manifest with some local charts. We could've also simply pointed Loftsman at a remote Helm charts repo as well, even if it's secured and needs credentialed access:
+ We just saw an example of shipping a manifest with some local charts. We could've also simply pointed Loftsman at a remote Helm charts repo as well, even if it's secured and needs credentialed access, and can use a manifest like:
 
  ```
-$ loftsman ship --charts-repo https://charts.my.org --charts-repo-username ***** --charts-repo-password ***** --manifest-path ./manifest.yaml
+ apiVersion: manifests/v1beta1
+ metadata:
+   name: my-alt-manifest
+ spec:
+   sources:
+     charts:
+     - type: repo
+       name: myorg
+       location: https://charts.myorg.com
+   charts:
+   - name: my-chart
+     source: myorg
+     version: 0.1.0
+     namespace: default
  ```
-
- _NOTE: v2.x of Loftsman, which will also include support for Loftsman running as an operator in the cluster and receiving applied manifests, will be able to deal with multiple chart repos at a time. In short, we're moving almost everything out of CLI args and going to let it be driven by manifest configuration._
 
 ## Next Steps in Working with Loftsman
+
+_NOTE: v2.x of Loftsman, which will also include support for Loftsman running as an operator in the cluster and receiving applied manifests, will be able to deal with multiple chart repos at a time. In short, we're moving almost everything out of CLI args and going to let it be driven by manifest configuration._
 
 Now that we've shipped our first manifest, we're in good shape. But there are other things that will help us use Loftsman well.
 
@@ -237,45 +259,95 @@ Now that we've shipped our first manifest, we're in good shape. But there are ot
 We were able to see in the logs from our first `loftsman ship` operation:
 
 ```
-2021-04-10T17:37:56-06:00 INF Ship status: success. Recording status, manifest, and log data to configmap loftsman-my-first-manifest in namespace loftsman command=ship
+2021-09-21T11:41:09-06:00 INF Ship status: success. Recording status, manifest, and log data to configmap loftsman-my-first-manifest in namespace loftsman command=ship
 ```
 
 So, let's take a closer look at that Kubernetes-stored `ConfigMap`:
 
 ```
 apiVersion: v1
-kind: ConfigMap
+items:
+- apiVersion: v1
+  data:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIC5zCCAc+gAwIBAgIBADANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwprdWJl
+      cm5ldGVzMB4XDTIxMDkyMTE3MzMxMFoXDTMxMDkxOTE3MzMxMFowFTETMBEGA1UE
+      AxMKa3ViZXJuZXRlczCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALiV
+      Pae2nObpj6CXw4GSCfEX9bVBQ+gOZyMqiJhcBHlUQwSe7sMvTk1HzRyKTWsQmiKm
+      5s5FT9wB+2yZwZmQ5ZgyArxybpTe6kILWPKTww/jAMu25gC+nPyCWmSfmpeM9pa9
+      qDD+XL8p2XsnEAQE41jHKF0uKT1pU0ybYmy9NlYfrxzjvxEG/+qubgGs0SNwf1Lu
+      C+GmHENE2NgLkDIhCvcU+8Wz+ucQyW2QRd4E3KAdMykyVj91a2tkmpQmwisUXY4Z
+      QusXFmjFOLd3bJ6f9oEERAUWd4zKvgXUcm8q5j83ued9XU7W9sQU8XdZzvQ9hQkZ
+      nsSQjyUjg+y1ha3yOI0CAwEAAaNCMEAwDgYDVR0PAQH/BAQDAgKkMA8GA1UdEwEB
+      /wQFMAMBAf8wHQYDVR0OBBYEFAxwHq90FafTk3ZPkOxB4sukjMivMA0GCSqGSIb3
+      DQEBCwUAA4IBAQB1z7RfxCHBTJ/D734GvxYXSBSUkNe5Z6i8ygcFGGEdrUB+a02G
+      zY6FFOmyE/+qg86oOX2+k55wBZno7m4d9rQzloxs9r4HUDzE7Zjyl7MtMi+dMNLE
+      4CqD85+75UBhW/IF2MLT/Bz0iI6CMsB/9dmJUREPTFAaXkyZ+0kxRz8JxszR6iqa
+      pMYecJ/cFo3z+U4a+irrdH+DR0AR7DvQ9vvzZWLNxK4z3RMBjIhb8kQlAaDyS+yq
+      NiFW6tjcedhPhkT1eL9gs91iAQkoMH3+WfWW4n9434hEK08zoQb674C/ZfSFtSHw
+      0CpdmpRPatWJJiuD4IQESq6tamklsdZl5Xs2
+      -----END CERTIFICATE-----
+  kind: ConfigMap
+  metadata:
+    creationTimestamp: "2021-09-21T17:41:02Z"
+    name: kube-root-ca.crt
+    namespace: loftsman
+    resourceVersion: "1095"
+    uid: 17201146-b75d-41f8-8bbe-8a1b1755243c
+- apiVersion: v1
+  data:
+    loftsman.log: |
+      {"level":"info","command":"ship","time":"2021-09-21T11:41:02-06:00","message":"Initializing the connection to the Kubernetes cluster using KUBECONFIG (system default), and context (current-context)"}
+      {"level":"info","command":"ship","time":"2021-09-21T11:41:02-06:00","message":"Initializing helm client object"}
+      {"command":"ship","header":"Shipping your Helm workloads with Loftsman","time":"2021-09-21T11:41:02-06:00"}
+      {"level":"info","command":"ship","time":"2021-09-21T11:41:02-06:00","message":"Ensuring that the loftsman namespace exists"}
+      {"level":"info","command":"ship","time":"2021-09-21T11:41:02-06:00","message":"Running a release for the provided manifest at ./manifest.yaml"}
+      {"command":"ship","sub-header":"Releasing consul v0.33.0","time":"2021-09-21T11:41:02-06:00"}
+      {"level":"info","command":"ship","chart":"consul","version":"0.33.0","namespace":"default","time":"2021-09-21T11:41:02-06:00","message":"Running helm install/upgrade with arguments: upgrade --install consul https://helm.releases.hashicorp.com/consul-0.33.0.tgz --namespace default --create-namespace --set global.chart.name=consul --set global.chart.version=0.33.0"}
+      {"level":"info","command":"ship","chart":"consul","version":"0.33.0","namespace":"default","time":"2021-09-21T11:41:07-06:00","message":"Release \"consul\" does not exist. Installing it now.\nNAME: consul\nLAST DEPLOYED: Tue Sep 21 11:41:06 2021\nNAMESPACE: default\nSTATUS: deployed\nREVISION: 1\nNOTES:\nThank you for installing HashiCorp Consul!\n\nNow that you have deployed Consul, you should look over the docs on using \nConsul with Kubernetes available here: \n\nhttps://www.consul.io/docs/platform/k8s/index.html\n\n\nYour release is named consul.\n\nTo learn more about the release, run:\n\n  $ helm status consul\n  $ helm get all consul\n"}
+      {"command":"ship","sub-header":"Releasing victoria-metrics-cluster v0.8.24","time":"2021-09-21T11:41:07-06:00"}
+      {"level":"info","command":"ship","chart":"victoria-metrics-cluster","version":"0.8.24","namespace":"default","time":"2021-09-21T11:41:07-06:00","message":"Running helm install/upgrade with arguments: upgrade --install victoria-metrics-cluster charts/victoria-metrics-cluster-0.8.24.tgz --namespace default --create-namespace --set global.chart.name=victoria-metrics-cluster --set global.chart.version=0.8.24"}
+      {"level":"info","command":"ship","chart":"victoria-metrics-cluster","version":"0.8.24","namespace":"default","time":"2021-09-21T11:41:09-06:00","message":"Release \"victoria-metrics-cluster\" does not exist. Installing it now.\nNAME: victoria-metrics-cluster\nLAST DEPLOYED: Tue Sep 21 11:41:09 2021\nNAMESPACE: default\nSTATUS: deployed\nREVISION: 1\nTEST SUITE: None\nNOTES:\nWrite API:\n\nThe Victoria Metrics write api can be accessed via port 8480 on the following DNS name from within your cluster:\nvictoria-metrics-cluster-vminsert.default.svc.cluster.local\n\nGet the Victoria Metrics insert service URL by running these commands in the same shell:\n  export POD_NAME=$(kubectl get pods --namespace default -l \"app=vminsert\" -o jsonpath=\"{.items[0].metadata.name}\")\n  kubectl --namespace default port-forward $POD_NAME 8480\n\nYou need to update your prometheus configuration file and add next lines into it:\n\nprometheus.yml\n```yaml\nremote_write:\n  - url: \"http://<insert-service>/insert/0/prometheus/\"\n\n```\n\nfor e.g. inside the kubernetes cluster:\n```yaml\nremote_write:\n  - url: \"http://victoria-metrics-cluster-vminsert.default.svc.cluster.local:8480/insert/0/prometheus/\"\n\n```\nRead API:\n\nThe Victoria Metrics read api can be accessed via port 8481 on the following DNS name from within your cluster:\nvictoria-metrics-cluster-vmselect.default.svc.cluster.local\n\nGet the Victoria Metrics select service URL by running these commands in the same shell:\n  export POD_NAME=$(kubectl get pods --namespace default -l \"app=vmselect\" -o jsonpath=\"{.items[0].metadata.name}\")\n  kubectl --namespace default port-forward $POD_NAME 8481\n\nYou need to update specify select service URL in your Grafana:\n NOTE: you need to use Prometheus Data Source\n\nInput for URL field in Grafana\n\n```\nhttp://<select-service>/select/0/prometheus/\n```\n\nfor e.g. inside the kubernetes cluster:\n```\nhttp://victoria-metrics-cluster-vmselect.default.svc.cluster.local:8481/select/0/prometheus/\"\n```\n"}
+      {"level":"info","command":"ship","time":"2021-09-21T11:41:09-06:00","message":"Ship status: success. Recording status, manifest, and log data to configmap loftsman-my-first-manifest in namespace loftsman"}
+    manifest.yaml: |
+      apiVersion: manifests/v1beta1
+      metadata:
+        name: my-first-manifest
+      spec:
+        sources:
+          charts:
+          - type: directory
+            name: local
+            location: ./charts
+          - type: repo
+            name: hashicorp
+            location: https://helm.releases.hashicorp.com
+        charts:
+        - name: consul
+          source: hashicorp
+          version: 0.33.0
+          namespace: default
+        - name: victoria-metrics-cluster
+          source: local
+          version: 0.8.24
+          namespace: default
+    status: success
+  kind: ConfigMap
+  metadata:
+    annotations:
+      loftsman.io/previous-data: ""
+    creationTimestamp: "2021-09-21T17:41:02Z"
+    labels:
+      app.kubernetes.io/managed-by: loftsman
+    name: loftsman-my-first-manifest
+    namespace: loftsman
+    resourceVersion: "1216"
+    uid: 071e1ffc-2a86-4d32-b46c-7b17db680256
+kind: List
 metadata:
-  name: loftsman-my-first-manifest
-  namespace: loftsman
-data:
-  loftsman.log: |
-    {"level":"info","command":"ship","time":"2021-04-10T17:37:43-06:00","message":"Initializing the connection to the Kubernetes cluster using KUBECONFIG (system default), and context (current-context)"}
-    {"level":"info","command":"ship","time":"2021-04-10T17:37:44-06:00","message":"Initializing helm client object"}
-    {"command":"ship","header":"Shipping your Helm workloads with Loftsman","time":"2021-04-10T17:37:44-06:00"}
-    {"level":"info","command":"ship","time":"2021-04-10T17:37:44-06:00","message":"Ensuring that the loftsman namespace exists"}
-    {"level":"info","command":"ship","time":"2021-04-10T17:37:44-06:00","message":"Loftsman will use the packaged charts at ./charts as the Helm install source"}
-    {"level":"info","command":"ship","time":"2021-04-10T17:37:44-06:00","message":"Running a release for the provided manifest at ./manifest.yaml"}
-    {"command":"ship","sub-header":"Releasing consul v9.2.8","time":"2021-04-10T17:37:45-06:00"}
-    {"level":"info","command":"ship","chart":"consul","version":"9.2.8","namespace":"default","time":"2021-04-10T17:37:45-06:00","message":"Running helm install/upgrade with arguments: upgrade --install consul charts/consul-9.2.8.tgz --namespace default --create-namespace --set global.chart.name=consul --set global.chart.version=9.2.8"}
-    {"level":"info","command":"ship","chart":"consul","version":"9.2.8","namespace":"default","time":"2021-04-10T17:37:50-06:00","message":"Release \"consul\" does not exist. Installing it now.\nNAME: consul\nLAST DEPLOYED: Sat Apr 10 17:37:48 2021\nNAMESPACE: default\nSTATUS: deployed\nREVISION: 1\nTEST SUITE: None\nNOTES:\n** Please be patient while the chart is being deployed **\n\n  Consul can be accessed within the cluster on port 8300 at consul-headless.default.svc.cluster.local\n\nIn order to access to the Consul Web UI:\n\n1. Get the Consul URL by running these commands:\n\n    kubectl port-forward --namespace default svc/consul-ui 80:80\n    echo \"Consul URL: http://127.0.0.1:80\"\n\n2. Access ASP.NET Core using the obtained URL.\n\nPlease take into account that you need to wait until a cluster leader is elected before using the Consul Web UI.\n\nIn order to check the status of the cluster you can run the following command:\n\n    kubectl exec -it consul-0 -- consul members\n\nFurthermore, to know which Consul node is the cluster leader run this other command:\n\n    kubectl exec -it consul-0 -- consul operator raft list-peers\n"}
-    {"command":"ship","sub-header":"Releasing victoria-metrics-cluster v0.8.24","time":"2021-04-10T17:37:50-06:00"}
-    {"level":"info","command":"ship","chart":"victoria-metrics-cluster","version":"0.8.24","namespace":"default","time":"2021-04-10T17:37:50-06:00","message":"Running helm install/upgrade with arguments: upgrade --install victoria-metrics-cluster charts/victoria-metrics-cluster-0.8.24.tgz --namespace default --create-namespace --set global.chart.name=victoria-metrics-cluster --set global.chart.version=0.8.24"}
-    {"level":"info","command":"ship","chart":"victoria-metrics-cluster","version":"0.8.24","namespace":"default","time":"2021-04-10T17:37:56-06:00","message":"Release \"victoria-metrics-cluster\" does not exist. Installing it now.\nNAME: victoria-metrics-cluster\nLAST DEPLOYED: Sat Apr 10 17:37:53 2021\nNAMESPACE: default\nSTATUS: deployed\nREVISION: 1\nTEST SUITE: None\nNOTES:\nWrite API:\n\nThe Victoria Metrics write api can be accessed via port 8480 on the following DNS name from within your cluster:\nvictoria-metrics-cluster-vminsert.default.svc.cluster.local\n\nGet the Victoria Metrics insert service URL by running these commands in the same shell:\n  export POD_NAME=$(kubectl get pods --namespace default -l \"app=vminsert\" -o jsonpath=\"{.items[0].metadata.name}\")\n  kubectl --namespace default port-forward $POD_NAME 8480\n\nYou need to update your prometheus configuration file and add next lines into it:\n\nprometheus.yml\n```yaml\nremote_write:\n  - url: \"http://<insert-service>/insert/0/prometheus/\"\n\n```\n\nfor e.g. inside the kubernetes cluster:\n```yaml\nremote_write:\n  - url: \"http://victoria-metrics-cluster-vminsert.default.svc.cluster.local:8480/insert/0/prometheus/\"\n\n```\nRead API:\n\nThe Victoria Metrics read api can be accessed via port 8481 on the following DNS name from within your cluster:\nvictoria-metrics-cluster-vmselect.default.svc.cluster.local\n\nGet the Victoria Metrics select service URL by running these commands in the same shell:\n  export POD_NAME=$(kubectl get pods --namespace default -l \"app=vmselect\" -o jsonpath=\"{.items[0].metadata.name}\")\n  kubectl --namespace default port-forward $POD_NAME 8481\n\nYou need to update specify select service URL in your Grafana:\n NOTE: you need to use Prometheus Data Source\n\nInput for URL field in Grafana\n\n```\nhttp://<select-service>/select/0/prometheus/\n```\n\nfor e.g. inside the kubernetes cluster:\n```\nhttp://victoria-metrics-cluster-vmselect.default.svc.cluster.local:8481/select/0/prometheus/\"\n```\n"}
-    {"level":"info","command":"ship","time":"2021-04-10T17:37:56-06:00","message":"Ship status: success. Recording status, manifest, and log data to configmap loftsman-my-first-manifest in namespace loftsman"}
-  manifest.yaml: |
-    apiVersion: manifests/v1beta1
-    metadata:
-      name: my-first-manifest
-    spec:
-      charts:
-      - name: consul
-        version: 9.2.8
-        namespace: default
-      - name: victoria-metrics-cluster
-        version: 0.8.24
-        namespace: default
-  status: success
+  resourceVersion: ""
+  selfLink: ""
 ```
 
 Let's look at all the individual pieces:
