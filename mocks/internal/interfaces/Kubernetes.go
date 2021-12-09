@@ -84,8 +84,31 @@ func (_m *Kubernetes) Initialize(kubeconfigPath string, kubeContext string) erro
 	return r0
 }
 
-// InitializeConfigMap provides a mock function with given fields: name, namespace, data
-func (_m *Kubernetes) InitializeConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error) {
+// InitializeShipConfigMap provides a mock function with given fields: name, namespace, data
+func (_m *Kubernetes) InitializeShipConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error) {
+	ret := _m.Called(name, namespace, data)
+
+	var r0 *v1.ConfigMap
+	if rf, ok := ret.Get(0).(func(string, string, map[string]string) *v1.ConfigMap); ok {
+		r0 = rf(name, namespace, data)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*v1.ConfigMap)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, map[string]string) error); ok {
+		r1 = rf(name, namespace, data)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// InitializeShipConfigMap provides a mock function with given fields: name, namespace, data
+func (_m *Kubernetes) InitializeLogConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error) {
 	ret := _m.Called(name, namespace, data)
 
 	var r0 *v1.ConfigMap

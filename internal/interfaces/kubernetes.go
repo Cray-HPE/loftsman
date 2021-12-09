@@ -10,7 +10,8 @@ type Kubernetes interface {
 	IsRetryError(err error) bool
 	EnsureNamespace(name string) error
 	FindConfigMap(name string, namespace string, withKey string, withValue string) (*v1.ConfigMap, error)
-	InitializeConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error)
+	InitializeShipConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error)
+	InitializeLogConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error)
 	PatchConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error)
 	GetSecretKeyValue(secretName string, namespace string, dataKey string) (string, error)
 }

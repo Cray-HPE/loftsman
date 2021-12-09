@@ -133,17 +133,15 @@ func (k *Kubernetes) FindConfigMap(name string, namespace string, withKey string
 	return result, err
 }
 
-// InitializeConfigMap will ensure a configmap exists by name, in a namespace, with data. If an existing configmap
-// is found, the previous configmap's data will be persisted to a an annotation on the new version of the configmap
-func (k *Kubernetes) InitializeConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error) {
+// InitializeShipConfigMap will ensure a configmap exists by name, in a namespace, with data. If an existing configmap
+// is found and it is presisting previous data, then remove any previous data in the new version of the configmap
+func (k *Kubernetes) InitializeShipConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error) {
 	var err error
 	var result *v1.ConfigMap
-	previousDataAnnotationKey := "loftsman.io/previous-data"
 	err = retry.OnError(retry.DefaultBackoff, k.IsRetryError, func() error {
 		result, err = k.client.CoreV1().ConfigMaps(namespace).Get(context.Background(), name, metav1.GetOptions{})
 		if kerrors.IsNotFound(err) {
 			annotations := make(map[string]string)
-			annotations[previousDataAnnotationKey] = ""
 			result, err = k.client.CoreV1().ConfigMaps(namespace).Create(context.Background(), &v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        name,
@@ -158,17 +156,56 @@ func (k *Kubernetes) InitializeConfigMap(name string, namespace string, data map
 		if err != nil {
 			return err
 		}
-		previousData, err := json.Marshal(result.Data)
+
+		// Remove legacy annoations and fields
+		patchData := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"annotations": map[string]interface{}{
+					"loftsman.io/previous-data": nil,
+					"loftsman.io/ship-log-configmap": fmt.Sprintf("%s-ship-log", name),
+				},
+			},
+			"data": map[string]interface{}{
+				"loftsman.log": nil,
+			},
+		}
+		patchDataEncoded, err := json.Marshal(patchData)
 		if err != nil {
 			return err
 		}
-		result.ObjectMeta.Annotations[previousDataAnnotationKey] = string(previousData)
-		patchData, err := json.Marshal(v1.ConfigMap{
-			ObjectMeta: result.ObjectMeta,
-			Data:       data,
-		})
+
 		result, err = k.client.CoreV1().ConfigMaps(namespace).Patch(context.Background(), name,
-			types.StrategicMergePatchType, []byte(patchData), metav1.PatchOptions{})
+			types.MergePatchType, []byte(patchDataEncoded), metav1.PatchOptions{})
+
+		return err
+	})
+	return result, err
+}
+
+// InitializeLogConfigMap will ensure a configmap exists by name, in a namespace, with data. If an existing configmap
+// is found then it will not be modifed
+func (k *Kubernetes) InitializeLogConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error) {
+	var err error
+	var result *v1.ConfigMap
+	err = retry.OnError(retry.DefaultBackoff, k.IsRetryError, func() error {
+		result, err = k.client.CoreV1().ConfigMaps(namespace).Get(context.Background(), name, metav1.GetOptions{})
+		if kerrors.IsNotFound(err) {
+			annotations := make(map[string]string)
+			result, err = k.client.CoreV1().ConfigMaps(namespace).Create(context.Background(), &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        name,
+					Namespace:   namespace,
+					Labels:      k.getCommonLabels(),
+					Annotations: annotations,
+				},
+				Data: data,
+			}, metav1.CreateOptions{})
+			return err
+		}
+		if err != nil {
+			return err
+		}
+
 		return err
 	})
 	return result, err

@@ -38,7 +38,8 @@ const (
 	statusCancelled       = "cancelled"
 	statusCrashed         = "crashed"
 	statusAvasted         = "avasted"
-	configMapNameTemplate = "loftsman-%s"
+	shipConfigMapNameTemplate = "loftsman-%s"
+	logConfigMapNameTemplate = "loftsman-%s-ship-log"
 )
 
 // To reduce the need for always initializing cluster connectivity and internal objects
@@ -119,14 +120,17 @@ func (loftsman *Loftsman) Ship() error {
 
 	loftsman.logger.Header("Shipping your Helm workloads with Loftsman")
 
-	configMapName := fmt.Sprintf(configMapNameTemplate, loftsman.Settings.Manifest.Name)
-	configMapData := make(map[string]string)
+	shipConfigMapName := fmt.Sprintf(shipConfigMapNameTemplate, loftsman.Settings.Manifest.Name)
+	shipConfigMapData := make(map[string]string)
+	logConfigMapName := fmt.Sprintf(logConfigMapNameTemplate, loftsman.Settings.Manifest.Name)
+	logConfigMapData := make(map[string]string)
 
 	loftsman.logger.Info().Msgf("Ensuring that the %s namespace exists", loftsman.Settings.Namespace)
 	if err = loftsman.kubernetes.EnsureNamespace(loftsman.Settings.Namespace); err != nil {
 		return loftsman.fail(fmt.Errorf("Error ensuring that the %s namespace exists: %s", loftsman.Settings.Namespace, err))
 	}
-	activeConfigMap, err := loftsman.kubernetes.FindConfigMap(configMapName, loftsman.Settings.Namespace, statusKey, statusActive)
+
+	activeConfigMap, err := loftsman.kubernetes.FindConfigMap(shipConfigMapName, loftsman.Settings.Namespace, statusKey, statusActive)
 	if err != nil {
 		return loftsman.fail(fmt.Errorf("Error determining if another loftsman ship is in progress for manifest %s: %s", loftsman.Settings.Manifest.Name, err))
 	}
@@ -147,20 +151,25 @@ func (loftsman *Loftsman) Ship() error {
 
 	loftsman.logger.Info().Msgf("Running a release for the provided manifest at %s", loftsman.Settings.Manifest.Path)
 
-	configMapData[statusKey] = statusActive
+	shipConfigMapData[statusKey] = statusActive
 	sigChannel := make(chan os.Signal)
 	signal.Notify(sigChannel, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT)
 	go func() {
 		<-sigChannel
-		loftsman.recordShipResult(configMapName, configMapData, statusCancelled)
+		loftsman.recordShipResult(shipConfigMapName, shipConfigMapData, statusCancelled)
+		loftsman.recordShipLog(logConfigMapName, logConfigMapData)
 		os.Exit(0)
 	}()
-	if _, err := loftsman.kubernetes.InitializeConfigMap(configMapName, loftsman.Settings.Namespace, configMapData); err != nil {
-		return loftsman.fail(fmt.Errorf("Error creating ship configmap %s in namespace %s: %s", configMapName, loftsman.Settings.Namespace, err))
+	if _, err := loftsman.kubernetes.InitializeShipConfigMap(shipConfigMapName, loftsman.Settings.Namespace, shipConfigMapData); err != nil {
+		return loftsman.fail(fmt.Errorf("Error creating ship configmap %s in namespace %s: %s", shipConfigMapName, loftsman.Settings.Namespace, err))
+	}
+	if _, err := loftsman.kubernetes.InitializeLogConfigMap(logConfigMapName, loftsman.Settings.Namespace, logConfigMapData); err != nil {
+		return loftsman.fail(fmt.Errorf("Error creating log configmap %s in namespace %s: %s", logConfigMapName, loftsman.Settings.Namespace, err))
 	}
 	crashHandler := func() {
 		if r := recover(); r != nil {
-			loftsman.recordShipResult(configMapName, configMapData, statusCrashed)
+			loftsman.recordShipResult(shipConfigMapName, shipConfigMapData, statusCrashed)
+			loftsman.recordShipLog(logConfigMapName, logConfigMapData)
 			loftsman.fail(fmt.Errorf("%v", r))
 		}
 	}
@@ -172,7 +181,8 @@ func (loftsman *Loftsman) Ship() error {
 	if len(releaseErrors) > 0 {
 		releaseStatus = statusFailed
 	}
-	loftsman.recordShipResult(configMapName, configMapData, releaseStatus)
+	loftsman.recordShipResult(shipConfigMapName, shipConfigMapData, releaseStatus)
+	loftsman.recordShipLog(logConfigMapName, logConfigMapData)
 
 	if len(releaseErrors) > 0 {
 		loftsman.logger.ClosingHeader("Encountered errors during the manifest release:")
@@ -190,14 +200,27 @@ func (loftsman *Loftsman) Ship() error {
 }
 
 func (loftsman *Loftsman) recordShipResult(configMapName string, configMapData map[string]string, status string) {
-	loftsman.logger.Info().Msgf("Ship status: %s. Recording status, manifest, and log data to configmap %s in namespace %s", status,
-		configMapName, loftsman.Settings.Namespace)
+	loftsman.logger.Info().Msgf("Ship status: %s. Recording status, manifest to configmap %s in namespace %s", status,
+	configMapName, loftsman.Settings.Namespace)
 	configMapData["manifest.yaml"] = string(loftsman.Settings.Manifest.Content)
-	configMapData["loftsman.log"] = loftsman.logger.GetRecord()
 	configMapData["status"] = status
 	if _, err := loftsman.kubernetes.PatchConfigMap(configMapName, loftsman.Settings.Namespace, configMapData); err != nil {
 		loftsman.logger.Error().Err(fmt.Errorf("Error patching configmap %s with result, manifest, and log data to the %s namespace: %s",
 			configMapName, loftsman.Settings.Namespace, err)).Msg("")
+		fmt.Println("")
+	}
+}
+
+func (loftsman *Loftsman) recordShipLog(configMapName string, configMapData map[string]string) {
+	loftsman.logger.Info().Msgf("Recording log data to configmap %s in namespace %s",
+		configMapName, loftsman.Settings.Namespace)
+
+	logConfigMapData := make(map[string]string)
+	logConfigMapData["loftsman.log"] = loftsman.logger.GetRecord()
+
+	if _, err := loftsman.kubernetes.PatchConfigMap(configMapName, loftsman.Settings.Namespace, logConfigMapData); err != nil {
+		loftsman.logger.Error().Err(fmt.Errorf("Error patching configmap %s with log data to the %s namespace: %s",
+		configMapName, loftsman.Settings.Namespace, err)).Msg("")
 		fmt.Println("")
 	}
 }
@@ -255,7 +278,7 @@ func (loftsman *Loftsman) Avast() error {
 		return nil
 	}
 
-	configMapName := fmt.Sprintf(configMapNameTemplate, loftsman.Settings.Manifest.Name)
+	configMapName := fmt.Sprintf(shipConfigMapNameTemplate, loftsman.Settings.Manifest.Name)
 
 	activeConfigMap, err := loftsman.kubernetes.FindConfigMap(configMapName, loftsman.Settings.Namespace, statusKey, statusActive)
 	if err != nil {
