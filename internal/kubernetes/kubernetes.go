@@ -138,10 +138,12 @@ func (k *Kubernetes) FindConfigMap(name string, namespace string, withKey string
 func (k *Kubernetes) InitializeShipConfigMap(name string, namespace string, data map[string]string) (*v1.ConfigMap, error) {
 	var err error
 	var result *v1.ConfigMap
+	logConfigMapName := fmt.Sprintf("%s-ship-log", name)
 	err = retry.OnError(retry.DefaultBackoff, k.IsRetryError, func() error {
 		result, err = k.client.CoreV1().ConfigMaps(namespace).Get(context.Background(), name, metav1.GetOptions{})
 		if kerrors.IsNotFound(err) {
 			annotations := make(map[string]string)
+			annotations["loftsman.io/ship-log-configmap"] = logConfigMapName
 			result, err = k.client.CoreV1().ConfigMaps(namespace).Create(context.Background(), &v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        name,
@@ -162,7 +164,7 @@ func (k *Kubernetes) InitializeShipConfigMap(name string, namespace string, data
 			"metadata": map[string]interface{}{
 				"annotations": map[string]interface{}{
 					"loftsman.io/previous-data": nil,
-					"loftsman.io/ship-log-configmap": fmt.Sprintf("%s-ship-log", name),
+					"loftsman.io/ship-log-configmap": logConfigMapName,
 				},
 			},
 			"data": map[string]interface{}{
