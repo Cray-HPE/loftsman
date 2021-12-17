@@ -102,7 +102,7 @@ func TestFindConfigMapNotFound(t *testing.T) {
 	}
 }
 
-func TestInitializeConfigMapNew(t *testing.T) {
+func TestInitializeShipConfigMapNew(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", `=~http://loftsman-tests`, httpmock.NewStringResponder(404, `{}`))
@@ -112,13 +112,13 @@ func TestInitializeConfigMapNew(t *testing.T) {
 	data := make(map[string]string)
 	data["one"] = "1"
 	data["two"] = "2"
-	_, err := k.InitializeConfigMap("loftsman-tests", "default", data)
+	_, err := k.InitializeShipConfigMap("loftsman-tests", "default", data)
 	if err != nil {
 		t.Errorf("Got unexpected error from kubernetes.TestInitializeConfigMapNew(): %s", err)
 	}
 }
 
-func TestInitializeConfigMapExists(t *testing.T) {
+func TestInitializeShipConfigMapExists(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder("GET", `=~http://loftsman-tests`, httpmock.NewStringResponder(200, `{"metadata": {"annotations": {}}}`))
@@ -129,12 +129,44 @@ func TestInitializeConfigMapExists(t *testing.T) {
 	data := make(map[string]string)
 	data["one"] = "1"
 	data["two"] = "2"
-	_, err := k.InitializeConfigMap("loftsman-tests", "default", data)
+	_, err := k.InitializeShipConfigMap("loftsman-tests", "default", data)
 	if err != nil {
 		t.Errorf("Got unexpected error from kubernetes.TestInitializeConfigMapExists(): %s", err)
 	}
 }
 
+func TestInitializeLogConfigMapNew(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", `=~http://loftsman-tests`, httpmock.NewStringResponder(404, `{}`))
+	httpmock.RegisterResponder("POST", `=~http://loftsman-tests`, httpmock.NewStringResponder(200, `{}`))
+	k := &Kubernetes{}
+	_ = k.Initialize("./.test-fixtures/kubeconfig.yaml", "default")
+	data := make(map[string]string)
+	data["one"] = "1"
+	data["two"] = "2"
+	_, err := k.InitializeLogConfigMap("loftsman-tests-ship-log", "default", data)
+	if err != nil {
+		t.Errorf("Got unexpected error from kubernetes.TestInitializeLogConfigMapNew(): %s", err)
+	}
+}
+
+func TestInitializeLogConfigMapExists(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", `=~http://loftsman-tests`, httpmock.NewStringResponder(200, `{"metadata": {"annotations": {}}}`))
+	httpmock.RegisterResponder("POST", `=~http://loftsman-tests`, httpmock.NewStringResponder(200, `{}`))
+	httpmock.RegisterResponder("PATCH", `=~http://loftsman-tests`, httpmock.NewStringResponder(200, `{}`))
+	k := &Kubernetes{}
+	_ = k.Initialize("./.test-fixtures/kubeconfig.yaml", "default")
+	data := make(map[string]string)
+	data["one"] = "1"
+	data["two"] = "2"
+	_, err := k.InitializeLogConfigMap("loftsman-tests-ship-log", "default", data)
+	if err != nil {
+		t.Errorf("Got unexpected error from kubernetes.TestInitializeLogConfigMapExists(): %s", err)
+	}
+}
 func TestPatchConfigMap(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

@@ -31,7 +31,8 @@ func GetKubernetesMock(triggerFoundConfigMap bool) *kubernetesmocks.Kubernetes {
 		}
 		return nil
 	}, nil)
-	k.On("InitializeConfigMap", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).Return(&v1.ConfigMap{}, nil)
+	k.On("InitializeShipConfigMap", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).Return(&v1.ConfigMap{}, nil)
+	k.On("InitializeLogConfigMap", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).Return(&v1.ConfigMap{}, nil)
 	k.On("PatchConfigMap", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).Return(&v1.ConfigMap{}, nil)
 	k.On("GetSecretKeyValue", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(TestSecretKeyValue, nil)
 	return k
