@@ -18,7 +18,7 @@ WORKDIR /loftsman
 
 RUN go build -o ./loftsman -ldflags "-X 'github.com/Cray-HPE/loftsman/cmd.Version=${LOFTSMAN_VERSION}'"
 
-FROM alpine:latest as release
+FROM alpine:3.15 as release
 
 COPY --from=build /helm/bin/helm /usr/bin/helm
 COPY --from=build /loftsman/loftsman /usr/bin/loftsman
